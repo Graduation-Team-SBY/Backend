@@ -5,7 +5,7 @@ if (process.env.NODE_ENV !== "production") {
   dotenv.config();
 }
 
-const app = express();
+export const app = express();
 
 const PORT = process.env.PORT || 3000;
 
@@ -20,5 +20,3 @@ app
   .on("error", (error) => {
     throw new Error(error.message);
   });
-
-module.exports = app;
