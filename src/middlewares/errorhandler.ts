@@ -17,11 +17,24 @@ export const errorHandler = (
     message = `${field.replace(field[0], field[0].toUpperCase())} already exist!`
   }
 
-  switch (err.name) {
+  switch (err.name as string) {
     case 'ValidationError':
       status = 400;
       message = err.errors[Object.keys(err.errors)[0]].message;
       break;
+    case 'EmailRequired':
+      status = 400;
+      message = 'Please input your email!'
+      break;
+    case 'PasswordRequired':
+      status = 400;
+      message = 'Please input your password!';
+      break;
+    case 'Unauthorized':
+      status = 401;
+      message = 'Invalid email/password';
+      break;
   }
+  console.log(err);
   res.status(status).json({ message });
 };

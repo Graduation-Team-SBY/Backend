@@ -9,5 +9,6 @@ router.get('/', (req: Request, res: Response) => {
 });
 
 router.post('/register', Controller.register);
+router.post('/login', Controller.login)
 
 router.use(errorHandler);
