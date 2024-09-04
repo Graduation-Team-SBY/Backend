@@ -1,3 +1,5 @@
+import { ObjectId } from "mongoose";
+
 export interface IUser {
   _id: string;
   email: string;
@@ -40,10 +42,10 @@ export interface IJob {
   description: string;
   address: string;
   fee: number;
-  clientId: string;
-  workerId: string;
+  images?: string[];
+  clientId: ObjectId;
+  workerId?: ObjectId;
   categoryId: string;
-  jobStatusId: string;
 }
 
 export type IJobSchema = Omit<IJob, '_id'>;
@@ -93,6 +95,7 @@ export type ITransactionSchema = Omit<ITransaction, "_id">;
 
 export interface IJobStatus {
   _id: string;
+  jobId: ObjectId;
   isWorkerConfirmed?: boolean;
   isClientConfirmed?: boolean;
   isDone?: boolean;

@@ -75,12 +75,4 @@ export default class Controller {
   //     next(err);
   //   }
   // }
-
-  // static async template(req: Request, res: Response, next: NextFunction) {
-  //   try {
-
-  //   } catch (err) {
-  //     next(err);
-  //   }
-  // }
 }
