@@ -114,6 +114,57 @@ export class Controller {
     }
   }
 
+  static async getWorkerList(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { jobId } = req.params;
+      const agg = [
+        {
+          '$match': {
+            '_id': new ObjectId(jobId)
+          }
+        }, {
+          '$lookup': {
+            'from': 'jobrequests', 
+            'localField': '_id', 
+            'foreignField': 'jobId', 
+            'as': 'workers'
+          }
+        }, {
+          '$lookup': {
+            'from': 'workerprofiles', 
+            'localField': 'workers.workerId', 
+            'foreignField': 'userId', 
+            'as': 'workers',
+            'pipeline': [
+              {
+                '$lookup': {
+                  'from': 'profiles', 
+                  'localField': 'userId', 
+                  'foreignField': 'userId', 
+                  'as': 'detail'
+                }
+              }, {
+                '$project': {
+                  'detail.dateOfBirth': 0, 
+                  'detail.address': 0
+                }
+              }, {
+                '$unwind': {
+                  'path': '$detail', 
+                  'preserveNullAndEmptyArrays': true
+                }
+              }
+            ]
+          }
+        }
+      ];      
+      const workers = await Job.aggregate(agg);
+      res.status(200).json(workers[0]);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   // static async template(req: Request, res: Response, next: NextFunction) {
   //   try {
 
