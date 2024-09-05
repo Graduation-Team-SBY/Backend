@@ -19,3 +19,12 @@ export const uploadImageFiles = async (imageFiles: Express.Multer.File[], _id: O
   }
   return filesUrl;
 };
+
+export const uploadSingleImage = async (imageFile: Express.Multer.File, _id: ObjectId | undefined) => {
+  console.log(imageFile)
+  const fileName = `profile_pictures/${_id}-${Date.now()}.${imageFile.mimetype.split("/").pop()}`;
+  const storageRef = storage.bucket().file(fileName);
+  await storageRef.save(imageFile.buffer);
+  console.log(`Uploaded ${fileName} to Firebase Storage.`);
+  return `https://storage.googleapis.com/${storage.bucket().name}/${fileName}`;
+};

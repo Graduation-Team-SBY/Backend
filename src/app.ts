@@ -1,6 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
-import 'dotenv/config'
+import "dotenv/config";
 import { router } from "./routes";
 import { gooseConnect } from "./config/mongoose";
 
@@ -11,7 +11,7 @@ if (process.env.NODE_ENV !== "production") {
 export const app = express();
 
 app.use(express.json());
-app.use(express.urlencoded({extended: false}));
+app.use(express.urlencoded({ extended: false }));
 
 (async () => {
   await gooseConnect();
@@ -19,7 +19,7 @@ app.use(express.urlencoded({extended: false}));
 
 const PORT = process.env.PORT || 3000;
 
-app.use('/', router);
+app.use("/", router);
 
 app
   .listen(PORT, () => {
