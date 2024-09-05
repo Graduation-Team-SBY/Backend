@@ -12,8 +12,8 @@ export type IUserSchema = Omit<IUser, "_id">;
 
 export interface IProfile {
   _id: ObjectId;
-  name: string;
-  dateOfBirth: Date;
+  name?: string;
+  dateOfBirth?: Date;
   profilePicture?: string;
   address?: string;
   userId: ObjectId;

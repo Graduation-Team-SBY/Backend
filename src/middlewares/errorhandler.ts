@@ -34,6 +34,14 @@ export const errorHandler = (
       status = 401;
       message = 'Invalid email/password';
       break;
+    case 'Unauthenticated':
+      status = 401;
+      message = 'Invalid access token';
+      break;
+    case 'Forbidden':
+      status = 403;
+      message = 'Insufficient privileges to do this action';
+      break;
   }
   console.log(err);
   res.status(status).json({ message });
