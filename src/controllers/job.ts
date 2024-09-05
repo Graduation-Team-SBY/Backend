@@ -67,7 +67,7 @@ export class Controller {
       if (categoryId) {
         query.categoryId = new ObjectId(categoryId as string)
       }
-      const jobs = await Job.find(query);
+      const jobs = await Job.find(query).sort({ createdAt: -1 });
       res.status(200).json(jobs);
     } catch (err) {
       next(err);
@@ -81,7 +81,7 @@ export class Controller {
       if (categoryId) {
         query.categoryId = new ObjectId(categoryId as string)
       }
-      const jobs = await Job.find(query);
+      const jobs = await Job.find(query).sort({ createdAt: -1 });
       res.status(200).json(jobs);
     } catch (err) {
       next(err);
