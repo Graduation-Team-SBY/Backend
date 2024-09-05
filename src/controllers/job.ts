@@ -5,7 +5,7 @@ import { uploadImageFiles } from "../services/firebase";
 import { startSession } from "mongoose";
 
 export class Controller {
-  static async createJob(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
+  static async createJobBersih(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
     const session = await startSession();
     try {
       const { fee, categoryId, description, address } = req.body;
@@ -38,4 +38,37 @@ export class Controller {
       next(err);
     } 
   }
+
+  static async createJobBelanja(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
+    try {
+      const { fee, categoryId, description, address } = req.body;
+      const newJob = new Job({
+        description: description,
+        address: address,
+        fee: Number(fee),
+        categoryId: new ObjectId(categoryId),
+        clientId: req.user?._id,
+      });
+      await newJob.save();
+      res.status(201).json({ message: "Job is successfully created!" });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // static async template(req: Request, res: Response, next: NextFunction) {
+  //   try {
+
+  //   } catch (err) {
+  //     next(err);
+  //   }
+  // }
+
+  // static async template(req: Request, res: Response, next: NextFunction) {
+  //   try {
+
+  //   } catch (err) {
+  //     next(err);
+  //   }
+  // }
 }
