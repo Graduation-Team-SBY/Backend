@@ -3,9 +3,10 @@ import { Job } from "../models/job";
 import { ObjectId } from "mongodb";
 import { uploadImageFiles } from "../services/firebase";
 import { startSession } from "mongoose";
+import { AuthRequest } from "../types";
 
 export class Controller {
-  static async createJobBersih(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
+  static async createJobBersih(req: AuthRequest, res: Response, next: NextFunction) {
     const session = await startSession();
     try {
       const { fee, categoryId, description, address } = req.body;
@@ -41,7 +42,7 @@ export class Controller {
     }
   }
 
-  static async createJobBelanja(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
+  static async createJobBelanja(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { fee, categoryId, description, address } = req.body;
       const newJob = new Job({
@@ -58,7 +59,7 @@ export class Controller {
     }
   }
 
-  static async activeJobsClient(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
+  static async activeJobsClient(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { categoryId } = req.query;
       const query: { clientId: ObjectId, categoryId?: ObjectId } = {
@@ -74,7 +75,7 @@ export class Controller {
     }
   }
 
-  static async allJobsWorker(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
+  static async allJobsWorker(req: Request, res: Response, next: NextFunction) {
     try {
       const { categoryId } = req.query;
       const query: { categoryId?: ObjectId } = {}
@@ -83,6 +84,16 @@ export class Controller {
       }
       const jobs = await Job.find(query).sort({ createdAt: -1 });
       res.status(200).json(jobs);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async jobDetail(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { jobId } = req.params;
+      const job = await Job.findById(new ObjectId(jobId));
+      res.status(200).json(job);
     } catch (err) {
       next(err);
     }
