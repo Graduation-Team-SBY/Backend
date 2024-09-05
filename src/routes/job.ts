@@ -12,4 +12,4 @@ router.get("/", authentication, (req: Request & { user?: { _id: ObjectId } }, re
   const _id = req.user?._id;
   res.status(200).json({ _id });
 });
-router.post("/", authentication, upload.array("image", 4), JobController.createJob);
+router.post("/bersih", authentication, upload.array("image", 4), JobController.createJob);

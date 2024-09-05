@@ -38,14 +38,14 @@ export interface ICategory {
 export type ICategorySchema = Omit<ICategory, '_id'>;
 
 export interface IJob {
-  _id: string;
+  _id: ObjectId;
   description: string;
   address: string;
   fee: number;
   images?: string[];
   clientId: ObjectId;
   workerId?: ObjectId;
-  categoryId: string;
+  categoryId: ObjectId;
 }
 
 export type IJobSchema = Omit<IJob, '_id'>;

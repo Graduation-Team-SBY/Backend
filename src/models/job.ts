@@ -6,10 +6,10 @@ const jobSchema = new Schema<IJobSchema>({
     description: { type: String, required: true },
     address: { type: String, required: true },
     fee: { type: Number, required: true },
-    images: {type: Array },
+    images: { type: Array, default: null },
     clientId: { type: ObjectId, required: true },
-    workerId: { type: String, required: true },
-    categoryId: { type: String, required: true }
+    workerId: { type: ObjectId, default: null },
+    categoryId: { type: ObjectId, required: true }
 });
 
 export const Job = model('Job', jobSchema);
