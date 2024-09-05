@@ -12,4 +12,5 @@ router.get("/active", authentication, JobController.activeJobsClient);
 router.get('/worker', authWorker, JobController.allJobsWorker)
 router.post("/bersih", authentication, upload.array("image", 4), JobController.createJobBersih);
 router.post("/belanja", authentication, JobController.createJobBelanja);
-router.get('/:jobId', authentication, JobController.jobDetail)
+router.get('/:jobId', authentication, JobController.jobDetail);
+router.post('/:jobId', authWorker, JobController.applyJob);

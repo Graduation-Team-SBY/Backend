@@ -4,6 +4,7 @@ import { ObjectId } from "mongodb";
 import { uploadImageFiles } from "../services/firebase";
 import { startSession } from "mongoose";
 import { AuthRequest } from "../types";
+import { JobRequest } from "../models/jobrequest";
 
 export class Controller {
   static async createJobBersih(req: AuthRequest, res: Response, next: NextFunction) {
@@ -94,6 +95,20 @@ export class Controller {
       const { jobId } = req.params;
       const job = await Job.findById(new ObjectId(jobId));
       res.status(200).json(job);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async applyJob(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { jobId } = req.params;
+      const newJobReq = new JobRequest({
+        jobId: new ObjectId(jobId),
+        workerId: req.user?._id
+      });
+      await newJobReq.save();
+      res.status(201).json(newJobReq);
     } catch (err) {
       next(err);
     }
