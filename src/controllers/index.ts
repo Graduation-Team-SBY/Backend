@@ -1,8 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
-import { IUserSchema } from '../types';
-import { User } from '../models/user';
-import { comparePass, hashPassword } from '../helpers/bcrypt';
-import { signToken } from '../helpers/jwt';
+import { Request, Response, NextFunction } from "express";
+import { IUserSchema } from "../types";
+import { User } from "../models/user";
+import { comparePass, hashPassword } from "../helpers/bcrypt";
+import { signToken } from "../helpers/jwt";
 
 export default class Controller {
   static async register(req: Request, res: Response, next: NextFunction) {
@@ -14,6 +14,7 @@ export default class Controller {
         phoneNumber,
         password,
       });
+      console.log(req.body, "<<< req body");
       await newUser.validate();
       newUser.password = hashPassword(password);
       await newUser.save();
@@ -27,22 +28,20 @@ export default class Controller {
     try {
       const { email, password } = req.body;
       if (!email) {
-        throw { name: 'EmailRequired' };
+        throw { name: "EmailRequired" };
       }
       if (!password) {
-        throw { name: 'PasswordRequired' };
+        throw { name: "PasswordRequired" };
       }
 
-      const findUser = await User.findOne({ email }).select(
-        '_id email password'
-      );
+      const findUser = await User.findOne({ email }).select("_id email password");
 
       if (!findUser) {
-        throw { name: 'Unauthorized' };
+        throw { name: "Unauthorized" };
       }
 
       if (!comparePass(password, findUser.password)) {
-        throw { name: 'Unauthorized' };
+        throw { name: "Unauthorized" };
       }
 
       const access_token = signToken({ _id: `${findUser._id}` });
