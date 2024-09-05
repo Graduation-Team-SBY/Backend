@@ -3,22 +3,29 @@ import { IUserSchema } from "../types";
 import { User } from "../models/user";
 import { comparePass, hashPassword } from "../helpers/bcrypt";
 import { signToken } from "../helpers/jwt";
+import { startSession } from "mongoose";
+import { Profile } from "../models/profile";
 
 export default class Controller {
   static async register(req: Request, res: Response, next: NextFunction) {
+    const session = await startSession();
     try {
       const { email, phoneNumber, password }: IUserSchema = req.body;
-
       const newUser = new User({
         email,
         phoneNumber,
         password,
       });
-      console.log(req.body, "<<< req body");
-      await newUser.validate();
-      newUser.password = hashPassword(password);
-      await newUser.save();
-      res.status(201).json(newUser);
+      await session.withTransaction(async() => {
+        await newUser.validate();
+        newUser.password = hashPassword(password);
+        await newUser.save({ session });
+        const newProfile = new Profile({
+          userId: newUser._id
+        });
+        await newProfile.save();
+        res.status(201).json(newUser);
+      });
     } catch (err) {
       next(err);
     }

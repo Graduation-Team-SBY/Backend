@@ -11,12 +11,12 @@ export interface IUser {
 export type IUserSchema = Omit<IUser, '_id'>;
 
 export interface IProfile {
-  _id: string;
-  name: string;
-  dateOfBirth: Date;
+  _id: ObjectId;
+  name?: string;
+  dateOfBirth?: Date;
   profilePicture?: string;
   address?: string;
-  userId: string;
+  userId?: ObjectId;
 }
 
 export type IProfileSchema = Omit<IProfile, '_id'>;
