@@ -7,7 +7,9 @@ const profileSchema = new Schema<IProfileSchema>({
     dateOfBirth: { type: Date, default: null },
     profilePicture: { type: String },
     address: { type: String, default: null },
-    userId: ObjectId
+    userId: ObjectId,
+    createdAt: { type: Date, default: new Date() },
+    updatedAt: { type: Date, default: new Date() }
 });
 
 export const Profile = model("Profile", profileSchema);

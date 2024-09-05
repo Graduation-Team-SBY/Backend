@@ -6,6 +6,8 @@ const workerProfileSchema = new Schema<IWorkerProfileSchema>({
   bio: { type: String, required: true },
   joinDate: { type: Date, required: true },
   rating: { type: Number, required: true },
+  createdAt: { type: Date, default: new Date() },
+  updatedAt: { type: Date, default: new Date() }
 });
 
 export const WorkerProfile = model('WorkerProfile', workerProfileSchema);
