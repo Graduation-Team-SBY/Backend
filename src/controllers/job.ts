@@ -36,7 +36,9 @@ export class Controller {
       res.status(201).json({ message: "Job is successfully created!" });
     } catch (err) {
       next(err);
-    } 
+    } finally {
+      session.endSession();
+    }
   }
 
   static async createJobBelanja(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
@@ -62,6 +64,20 @@ export class Controller {
       const query: { clientId: ObjectId, categoryId?: ObjectId } = {
         clientId: req.user?._id as ObjectId
       }
+      if (categoryId) {
+        query.categoryId = new ObjectId(categoryId as string)
+      }
+      const jobs = await Job.find(query);
+      res.status(200).json(jobs);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async allJobsWorker(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
+    try {
+      const { categoryId } = req.query;
+      const query: { categoryId?: ObjectId } = {}
       if (categoryId) {
         query.categoryId = new ObjectId(categoryId as string)
       }

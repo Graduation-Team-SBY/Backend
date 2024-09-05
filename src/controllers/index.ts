@@ -28,6 +28,8 @@ export default class Controller {
       });
     } catch (err) {
       next(err);
+    } finally {
+      session.endSession();
     }
   }
 
