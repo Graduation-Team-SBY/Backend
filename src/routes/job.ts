@@ -8,9 +8,7 @@ export const router = Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-router.get("/", authentication, (req: Request & { user?: { _id: ObjectId } }, res: Response) => {
-  const _id = req.user?._id;
-  res.status(200).json({ _id });
-});
+router.get("/active", authentication, JobController.activeJobsClient);
+// router.get('/worker', auth)
 router.post("/bersih", authentication, upload.array("image", 4), JobController.createJobBersih);
 router.post("/belanja", authentication, JobController.createJobBelanja);

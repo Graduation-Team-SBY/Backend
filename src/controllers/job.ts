@@ -56,13 +56,21 @@ export class Controller {
     }
   }
 
-  // static async template(req: Request, res: Response, next: NextFunction) {
-  //   try {
-
-  //   } catch (err) {
-  //     next(err);
-  //   }
-  // }
+  static async activeJobsClient(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
+    try {
+      const { categoryId } = req.query;
+      const query: { clientId: ObjectId, categoryId?: ObjectId } = {
+        clientId: req.user?._id as ObjectId
+      }
+      if (categoryId) {
+        query.categoryId = new ObjectId(categoryId as string)
+      }
+      const jobs = await Job.find(query);
+      res.status(200).json(jobs);
+    } catch (err) {
+      next(err);
+    }
+  }
 
   // static async template(req: Request, res: Response, next: NextFunction) {
   //   try {
