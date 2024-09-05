@@ -42,6 +42,10 @@ export const errorHandler = (
       status = 403;
       message = 'Insufficient privileges to do this action';
       break;
+    case 'WorkerPicked':
+      status = 400;
+      message = 'You already picked a worker before';
+      break;
   }
   console.log(err);
   res.status(status).json({ message });

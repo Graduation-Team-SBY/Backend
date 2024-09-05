@@ -165,6 +165,20 @@ export class Controller {
     }
   }
 
+  static async pickWorker(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { jobId, workerId } = req.params;
+      const job = await Job.findById(new ObjectId(jobId));
+      if (job?.workerId !== null) {
+        throw {name: 'WorkerPicked'}
+      }
+      await Job.updateOne({_id: new ObjectId(jobId)}, {workerId: new ObjectId(workerId)})
+      res.status(200).json({message: 'Successfully pick worker'});
+    } catch (err) {
+      next(err);
+    }
+  }
+
   // static async template(req: Request, res: Response, next: NextFunction) {
   //   try {
 
