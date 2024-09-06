@@ -6,6 +6,7 @@ import { startSession } from "mongoose";
 import { AuthRequest } from "../types";
 import { JobRequest } from "../models/jobrequest";
 import { JobStatus } from "../models/jobstatus";
+import { Transaction } from "../models/transaction";
 
 export class Controller {
   static async createJobBersih(req: AuthRequest, res: Response, next: NextFunction) {
@@ -201,18 +202,26 @@ export class Controller {
   }
 
   static async clientConfirm(req: Request, res: Response, next: NextFunction) {
-    // const session = await startSession();
+    const session = await startSession();
     try {
       const { jobId } = req.params;
-      const findJob = await JobStatus.findOne({  jobId: new ObjectId(jobId) });
+      const objJobId = new ObjectId(jobId);
+      const findJob = await JobStatus.findOne({  jobId: objJobId });
       if (findJob?.isWorkerConfirmed === false) {
         throw {name: 'NotConfirmed'};
       }
-      // await session.withTransaction(async () => {})
-      await findJob?.updateOne({ isClientConfirmed: true, isDone: true });
+      await session.withTransaction(async () => {
+        await findJob?.updateOne({ isClientConfirmed: true, isDone: true }, { session });
+        const newTransaction = new Transaction({
+          jobId: objJobId
+        });
+        await newTransaction.save({session})
+      })
       res.status(200).json({message: 'Successfully update job order status'});
     } catch (err) {
       next(err);
+    } finally {
+      await session.endSession();
     }
   }
 
