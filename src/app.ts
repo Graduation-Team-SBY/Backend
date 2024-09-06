@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import "dotenv/config";
 import { router } from "./routes";
 import { gooseConnect } from "./config/mongoose";
+import cors from "cors"
 
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
@@ -12,6 +13,7 @@ export const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cors());
 
 (async () => {
   await gooseConnect();

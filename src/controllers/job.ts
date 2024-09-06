@@ -5,6 +5,7 @@ import { uploadImageFiles } from "../services/firebase";
 import { startSession } from "mongoose";
 import { AuthRequest } from "../types";
 import { JobRequest } from "../models/jobrequest";
+import { JobStatus } from "../models/jobstatus";
 
 export class Controller {
   static async createJobBersih(req: AuthRequest, res: Response, next: NextFunction) {
@@ -39,7 +40,7 @@ export class Controller {
     } catch (err) {
       next(err);
     } finally {
-      session.endSession();
+      await session.endSession();
     }
   }
 
@@ -166,14 +167,50 @@ export class Controller {
   }
 
   static async pickWorker(req: AuthRequest, res: Response, next: NextFunction) {
+    const session = await startSession();
     try {
       const { jobId, workerId } = req.params;
-      const job = await Job.findById(new ObjectId(jobId));
+      const objIdJob = new ObjectId(jobId);
+      const job = await Job.findById(objIdJob);
       if (job?.workerId !== null) {
         throw {name: 'WorkerPicked'}
       }
-      await Job.updateOne({_id: new ObjectId(jobId)}, {workerId: new ObjectId(workerId)})
-      res.status(200).json({message: 'Successfully pick worker'});
+      await session.withTransaction(async () => {
+        await Job.updateOne({_id: objIdJob}, {workerId: new ObjectId(workerId)}, { session });
+        const newJobStatus = new JobStatus({
+          jobId: objIdJob
+        });
+        await newJobStatus.save({session});
+      });
+      res.status(200).json({message: 'Successfully picked worker'});
+    } catch (err) {
+      next(err);
+    } finally {
+      await session.endSession();
+    }
+  }
+
+  static async workerConfirm(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { jobId } = req.params;
+      await JobStatus.updateOne({ jobId: new ObjectId(jobId) }, { isWorkerConfirmed: true });
+      res.status(200).json({message: 'Successfully update job status'});
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async clientConfirm(req: Request, res: Response, next: NextFunction) {
+    // const session = await startSession();
+    try {
+      const { jobId } = req.params;
+      const findJob = await JobStatus.findOne({  jobId: new ObjectId(jobId) });
+      if (findJob?.isWorkerConfirmed === false) {
+        throw {name: 'NotConfirmed'};
+      }
+      // await session.withTransaction(async () => {})
+      await findJob?.updateOne({ isClientConfirmed: true, isDone: true });
+      res.status(200).json({message: 'Successfully update job order status'});
     } catch (err) {
       next(err);
     }

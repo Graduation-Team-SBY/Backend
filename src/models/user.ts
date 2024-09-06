@@ -2,7 +2,7 @@ import { model, Schema } from 'mongoose';
 import { IUserSchema } from '../types';
 
 const userSchema = new Schema<IUserSchema>({
-  email: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true, match: [/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/, 'Invalid email address'] },
   phoneNumber: { type: String, required: true, unique: true },
   password: {
     type: String,
