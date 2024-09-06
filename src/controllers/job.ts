@@ -206,13 +206,16 @@ export class Controller {
     try {
       const { jobId } = req.params;
       const objJobId = new ObjectId(jobId);
-      const findJob = await JobStatus.findOne({  jobId: objJobId });
-      if (findJob?.isWorkerConfirmed === false) {
+      const findJobStatus = await JobStatus.findOne({  jobId: objJobId });
+      if (findJobStatus?.isWorkerConfirmed === false) {
         throw {name: 'NotConfirmed'};
       }
       await session.withTransaction(async () => {
-        await findJob?.updateOne({ isClientConfirmed: true, isDone: true }, { session });
+        await findJobStatus?.updateOne({ isClientConfirmed: true, isDone: true }, { session });
+        const job = await Job.findById(objJobId, '_id clientId workerId');
         const newTransaction = new Transaction({
+          clientId: job?.clientId,
+          workerId: job?.workerId,
           jobId: objJobId
         });
         await newTransaction.save({session})

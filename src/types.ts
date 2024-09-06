@@ -97,6 +97,8 @@ export type IWorkerProfileSchema = Omit<IWorkerProfile, '_id'>;
 
 export interface ITransaction {
   _id: ObjectId;
+  clientId: ObjectId;
+  workerId: ObjectId;
   jobId: ObjectId;
   createdAt?: Date;
   updatedAt?: Date;

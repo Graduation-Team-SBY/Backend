@@ -1,13 +1,13 @@
 import { model, Schema } from "mongoose";
 import { IProfileSchema } from "../types";
-import { ObjectId } from "mongodb";
+
 
 const profileSchema = new Schema<IProfileSchema>({
     name: { type: String, default: null },
     dateOfBirth: { type: Date, default: null },
-    profilePicture: { type: String },
+    profilePicture: { type: String, default: null },
     address: { type: String, default: null },
-    userId: ObjectId,
+    userId: { type: Schema.Types.ObjectId, required: true },
     createdAt: { type: Date, default: new Date() },
     updatedAt: { type: Date, default: new Date() }
 });
