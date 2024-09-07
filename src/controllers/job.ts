@@ -7,7 +7,7 @@ import { AuthRequest } from "../types";
 import { JobRequest } from "../models/jobrequest";
 import { JobStatus } from "../models/jobstatus";
 import { Transaction } from "../models/transaction";
-import { profileChecker } from "../helpers/profilechecker";
+import { profileChecker, profileWorkerChecker } from "../helpers/profilechecker";
 
 export class Controller {
   static async createJobBersih(req: AuthRequest, res: Response, next: NextFunction) {
@@ -84,7 +84,7 @@ export class Controller {
   static async allJobsWorker(req: Request, res: Response, next: NextFunction) {
     try {
       const { categoryId } = req.query;
-      const query: { categoryId?: ObjectId } = {}
+      const query: { categoryId?: ObjectId, workerId: null } = { workerId: null }
       if (categoryId) {
         query.categoryId = new ObjectId(categoryId as string)
       }
@@ -107,7 +107,7 @@ export class Controller {
 
   static async applyJob(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      await profileChecker(req.user?._id as ObjectId);
+      await profileWorkerChecker(req.user?._id as ObjectId);
       const { jobId } = req.params;
       const newJobReq = new JobRequest({
         jobId: new ObjectId(jobId),
