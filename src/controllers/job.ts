@@ -17,21 +17,21 @@ export class Controller {
         clientId: req.user?._id,
       });
       await session.withTransaction(async () => {
-        await newJob.save({session});
+        await newJob.save({ session });
         if (!req.files) {
-          throw {name: 'ImageNotFound'}
+          throw { name: "ImageNotFound" };
         }
-        if (!req.files.length){
-          throw {name: 'ImageNotFound'}
+        if (!req.files.length) {
+          throw { name: "ImageNotFound" };
         }
         const filesUrl = await uploadImageFiles(req.files as Express.Multer.File[], req.user?._id);
         if (!filesUrl) {
-          throw {name: 'ImageNotFound'}
+          throw { name: "ImageNotFound" };
         }
-        if (!filesUrl.length){
-          throw {name: 'ImageNotFound'}
+        if (!filesUrl.length) {
+          throw { name: "ImageNotFound" };
         }
-        await Job.updateOne({_id: newJob._id}, { images: filesUrl }, { session });
+        await Job.updateOne({ _id: newJob._id }, { images: filesUrl }, { session });
       });
       res.status(201).json({ message: "Job is successfully created!" });
     } catch (err) {
@@ -61,11 +61,11 @@ export class Controller {
   static async activeJobsClient(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
     try {
       const { categoryId } = req.query;
-      const query: { clientId: ObjectId, categoryId?: ObjectId } = {
-        clientId: req.user?._id as ObjectId
-      }
+      const query: { clientId: ObjectId; categoryId?: ObjectId } = {
+        clientId: req.user?._id as ObjectId,
+      };
       if (categoryId) {
-        query.categoryId = new ObjectId(categoryId as string)
+        query.categoryId = new ObjectId(categoryId as string);
       }
       const jobs = await Job.find(query);
       res.status(200).json(jobs);
@@ -77,9 +77,9 @@ export class Controller {
   static async allJobsWorker(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
     try {
       const { categoryId } = req.query;
-      const query: { categoryId?: ObjectId } = {}
+      const query: { categoryId?: ObjectId } = {};
       if (categoryId) {
-        query.categoryId = new ObjectId(categoryId as string)
+        query.categoryId = new ObjectId(categoryId as string);
       }
       const jobs = await Job.find(query);
       res.status(200).json(jobs);
@@ -88,6 +88,40 @@ export class Controller {
     }
   }
 
+  static async getChatByJobId(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { jobId } = req.params;
+
+      const chats = await Job.aggregate([
+        {
+          $match: {
+            // _id:
+          },
+        },
+        {
+          $lookup: {
+            from: "chats",
+            localField: "chatId",
+            foreignField: "_id",
+            as: "chats.contents",
+          },
+        },
+      ]);
+      res.status(200).json(chats);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async saveChats(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { senderId, message, createdAt } = req.body;
+      const { jobId } = req.params;
+      const chats = await 
+    } catch (err) {
+      next(err);
+    }
+  }
   // static async template(req: Request, res: Response, next: NextFunction) {
   //   try {
 

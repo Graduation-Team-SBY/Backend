@@ -102,3 +102,16 @@ export interface IJobStatus {
 }
 
 export type IJobStatusSchema = Omit<IJobStatus, "_id">;
+
+// ? Socket for chat types
+export interface IChatContent {
+  senderId: ObjectId;
+  message: string;
+  createdAt: Date;
+}
+
+export interface IChat {
+  _id: ObjectId;
+}
+
+export type IChatSchema = Omit<IChat, "_id">;

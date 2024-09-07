@@ -3,15 +3,25 @@ import dotenv from "dotenv";
 import "dotenv/config";
 import { router } from "./routes";
 import { gooseConnect } from "./config/mongoose";
-
+import { Server } from "socket.io";
+import { createServer } from "node:http";
+import cors from "cors";
+import { socketFunc } from "./services/socket";
+import { SocketChatData } from "./types";
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
 }
 
 export const app = express();
-
+export const server = createServer(app);
+export const io = new Server<SocketChatData>(server, {
+  cors: {
+    origin: "*",
+  },
+});
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cors());
 
 (async () => {
   await gooseConnect();
@@ -19,12 +29,10 @@ app.use(express.urlencoded({ extended: false }));
 
 const PORT = process.env.PORT || 3000;
 
+socketFunc(io);
+
 app.use("/", router);
 
-app
-  .listen(PORT, () => {
-    console.log("Server running at PORT: ", PORT);
-  })
-  .on("error", (error) => {
-    throw new Error(error.message);
-  });
+server.listen(PORT, () => {
+  console.log("Server running at PORT: ", PORT);
+});
