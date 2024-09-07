@@ -86,6 +86,7 @@ export type IReviewSchema = Omit<IReview, '_id'>;
 export interface IWorkerProfile {
   _id: ObjectId;
   userId: ObjectId;
+  name?: string;
   bio?: string;
   dateOfBirth?: Date;
   profilePicture?: string;

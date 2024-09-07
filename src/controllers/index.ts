@@ -81,7 +81,7 @@ export default class Controller {
         throw { name: "PasswordRequired" };
       }
 
-      const findUser = await User.findOne({ email }).select("_id email password");
+      const findUser = await User.findOne({ email }).select("_id email password role");
 
       if (!findUser) {
         throw { name: "Unauthorized" };
