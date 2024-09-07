@@ -4,11 +4,15 @@ import { Controller as WorkerController } from "../controllers/worker";
 import { Controller as JobController } from "../controllers/job";
 import { authorWorker } from "../middlewares/authorization";
 import Controller from "../controllers";
+import multer from "multer";
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 export const router = Router();
 router.post("/register", Controller.workerRegister);
-router.get('/jobs/worker', authWorker, JobController.allJobsWorker);
-router.patch('/jobs/:jobId/worker', authWorker, authorWorker, JobController.workerConfirm);
-router.post('/jobs/:jobId', authWorker, JobController.applyJob);
+router.get("/jobs/worker", authWorker, JobController.allJobsWorker);
+router.patch("/jobs/:jobId/worker", authWorker, authorWorker, upload.array("image", 4), JobController.workerConfirm);
+router.post("/jobs/:jobId", authWorker, JobController.applyJob);
 router.get("/:workerId", authentication, WorkerController.getWorkerById);
 router.get("/:workerId/reviews", authentication, WorkerController.getWorkerReviews);

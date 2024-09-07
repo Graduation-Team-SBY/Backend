@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { Job } from "../models/job";
 import { ObjectId } from "mongodb";
-import { uploadImageFiles } from "../services/firebase";
+import { uploadImageFiles, uploadWorkerConfirm } from "../services/firebase";
 import { startSession } from "mongoose";
 import { AuthRequest } from "../types";
 import { JobRequest } from "../models/jobrequest";
@@ -19,7 +19,7 @@ export class Controller {
         description: description,
         address: address,
         fee: Number(fee),
-        categoryId: new ObjectId('66d97dfec793c4c4de7c2db0'),
+        categoryId: new ObjectId("66d97dfec793c4c4de7c2db0"),
         clientId: req.user?._id,
       });
       await session.withTransaction(async () => {
@@ -30,7 +30,7 @@ export class Controller {
         if (!req.files.length) {
           throw { name: "ImageNotFound" };
         }
-        const filesUrl = await uploadImageFiles(req.files as Express.Multer.File[], req.user?._id);
+        const filesUrl = await uploadImageFiles(req.files as Express.Multer.File[], req.user?._id, newJob?._id);
         if (!filesUrl) {
           throw { name: "ImageNotFound" };
         }
@@ -55,7 +55,7 @@ export class Controller {
         description: description,
         address: address,
         fee: Number(fee),
-        categoryId: new ObjectId('66d97e7518cd9c2062da3d98'),
+        categoryId: new ObjectId("66d97e7518cd9c2062da3d98"),
         clientId: req.user?._id,
       });
       await newJob.save();
@@ -84,7 +84,7 @@ export class Controller {
   static async allJobsWorker(req: Request, res: Response, next: NextFunction) {
     try {
       const { categoryId } = req.query;
-      const query: { categoryId?: ObjectId, workerId: null } = { workerId: null }
+      const query: { categoryId?: ObjectId; workerId: null } = { workerId: null };
       if (categoryId) {
         query.categoryId = new ObjectId(categoryId as string);
       }
@@ -199,17 +199,40 @@ export class Controller {
     }
   }
 
-  static async workerConfirm(req: Request, res: Response, next: NextFunction) {
+  static async workerConfirm(req: AuthRequest, res: Response, next: NextFunction) {
+    const session = await startSession();
     try {
       const { jobId } = req.params;
-      await JobStatus.updateOne({ jobId: new ObjectId(jobId) }, { isWorkerConfirmed: true });
+      const updateJobStat = await JobStatus.findOne({ jobId: new ObjectId(jobId) });
+      if (!updateJobStat) {
+        throw { name: "NotFound" };
+      }
+      await session.withTransaction(async () => {
+        if (!req.files) {
+          throw { name: "ImageNotFound" };
+        }
+        if (!req.files.length) {
+          throw { name: "ImageNotFound" };
+        }
+        const filesUrl = await uploadWorkerConfirm(req.files as Express.Multer.File[], req.user?._id, new ObjectId(jobId));
+        if (!filesUrl) {
+          throw { name: "ImageNotFound" };
+        }
+        if (!filesUrl.length) {
+          throw { name: "ImageNotFound" };
+        }
+        updateJobStat.isWorkerConfirmed = true;
+        await updateJobStat.save({ session });
+      });
       res.status(200).json({ message: "Successfully update job status" });
     } catch (err) {
       next(err);
+    } finally {
+      await session.endSession();
     }
   }
 
-  static async clientConfirm(req: Request, res: Response, next: NextFunction) {
+  static async clientConfirm(req: AuthRequest, res: Response, next: NextFunction) {
     const session = await startSession();
     try {
       const { jobId } = req.params;
@@ -236,14 +259,14 @@ export class Controller {
     }
   }
 
-  static async getChatByJobId(req: Request, res: Response, next: NextFunction) {
+  static async getChatByJobId(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { jobId } = req.params;
 
       const chats = await Job.aggregate([
         {
           $match: {
-            // _id:
+            _id: new ObjectId(jobId),
           },
         },
         {
@@ -251,24 +274,40 @@ export class Controller {
             from: "chats",
             localField: "chatId",
             foreignField: "_id",
-            as: "chats.contents",
+            as: "chat",
+          },
+        },
+        {
+          $unwind: {
+            path: "$chat",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            description: 1,
+            address: 1,
+            fee: 1,
+            images: 1,
+            clientId: 1,
+            workerId: 1,
+            categoryId: 1,
+            "chat._id": 1,
+            "chat.contents": 1,
           },
         },
       ]);
-      res.status(200).json(chats);
+
+      if (!chats[0]) {
+        throw { name: "NotFound" };
+      }
+      res.status(200).json(chats[0].chat.content);
     } catch (err) {
       next(err);
     }
   }
 
-  static async saveChats(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { senderId, message, createdAt } = req.body;
-      const { jobId } = req.params;
-    } catch (err) {
-      next(err);
-    }
-  }
   // static async template(req: Request, res: Response, next: NextFunction) {
   //   try {
 
