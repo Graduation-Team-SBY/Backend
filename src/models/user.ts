@@ -9,7 +9,7 @@ const userSchema = new Schema<IUserSchema>({
     required: true,
     minlength: [6, 'Password must be at least 6 characters!'],
   },
-  isWorker: { type: Boolean, default: false },
+  role: { type: String, required: true },
   createdAt: { type: Date, default: new Date() },
   updatedAt: { type: Date, default: new Date() },
 });

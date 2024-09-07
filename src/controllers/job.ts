@@ -7,17 +7,19 @@ import { AuthRequest } from "../types";
 import { JobRequest } from "../models/jobrequest";
 import { JobStatus } from "../models/jobstatus";
 import { Transaction } from "../models/transaction";
+import { profileChecker, profileWorkerChecker } from "../helpers/profilechecker";
 
 export class Controller {
   static async createJobBersih(req: AuthRequest, res: Response, next: NextFunction) {
     const session = await startSession();
     try {
-      const { fee, categoryId, description, address } = req.body;
+      await profileChecker(req.user?._id as ObjectId);
+      const { fee, description, address } = req.body;
       const newJob = new Job({
         description: description,
         address: address,
         fee: Number(fee),
-        categoryId: new ObjectId(categoryId),
+        categoryId: new ObjectId('66d97dfec793c4c4de7c2db0'),
         clientId: req.user?._id,
       });
       await session.withTransaction(async () => {
@@ -47,12 +49,13 @@ export class Controller {
 
   static async createJobBelanja(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { fee, categoryId, description, address } = req.body;
+      await profileChecker(req.user?._id as ObjectId);
+      const { fee, description, address } = req.body;
       const newJob = new Job({
         description: description,
         address: address,
         fee: Number(fee),
-        categoryId: new ObjectId(categoryId),
+        categoryId: new ObjectId('66d97e7518cd9c2062da3d98'),
         clientId: req.user?._id,
       });
       await newJob.save();
@@ -81,7 +84,7 @@ export class Controller {
   static async allJobsWorker(req: Request, res: Response, next: NextFunction) {
     try {
       const { categoryId } = req.query;
-      const query: { categoryId?: ObjectId } = {};
+      const query: { categoryId?: ObjectId, workerId: null } = { workerId: null }
       if (categoryId) {
         query.categoryId = new ObjectId(categoryId as string);
       }
@@ -104,6 +107,7 @@ export class Controller {
 
   static async applyJob(req: AuthRequest, res: Response, next: NextFunction) {
     try {
+      await profileWorkerChecker(req.user?._id as ObjectId);
       const { jobId } = req.params;
       const newJobReq = new JobRequest({
         jobId: new ObjectId(jobId),

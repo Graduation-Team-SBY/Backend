@@ -6,7 +6,7 @@ export interface IUser {
   email: string;
   phoneNumber: string;
   password: string;
-  isWorker?: boolean;
+  role: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -28,7 +28,7 @@ export type IProfileSchema = Omit<IProfile, "_id">;
 
 export interface IWallet {
   _id: ObjectId;
-  amount: number;
+  amount?: number;
   userId: ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
@@ -87,9 +87,12 @@ export type IReviewSchema = Omit<IReview, "_id">;
 export interface IWorkerProfile {
   _id: ObjectId;
   userId: ObjectId;
-  bio: string;
-  joinDate: Date;
-  rating: number;
+  name?: string;
+  bio?: string;
+  dateOfBirth?: Date;
+  profilePicture?: string;
+  address?: string;
+  rating?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -124,19 +127,32 @@ export interface AuthRequest extends Request {
   user?: { _id: ObjectId };
 }
 
-// ? Socket for chat types
-export interface IChatContent {
-  // make this required when integrated
-  senderId?: ObjectId;
-  message: string;
-  createdAt: Date;
+export interface ITopUp {
+  _id: ObjectId;
+  topupId: string;
+  userId: ObjectId;
+  amount: number;
+  transToken: string;
+  status?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
+
+export type ITopUpSchema = Omit<ITopUp, "_id">;
+
+// ? Socket for chat types
 
 export interface IChat {
   _id: ObjectId;
   contents: IChatContent[];
   createdAt?: Date;
   updatedAt?: Date;
+}
+export interface IChatContent {
+  // make this required when integrated
+  senderId?: ObjectId;
+  message: string;
+  createdAt: Date;
 }
 
 export type IChatSchema = Omit<IChat, "_id">;
