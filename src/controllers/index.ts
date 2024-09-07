@@ -92,7 +92,7 @@ export default class Controller {
       }
 
       const access_token = signToken({ _id: `${findUser._id}` });
-      res.status(200).json({ access_token });
+      res.status(200).json({ access_token, role: findUser.role });
     } catch (err) {
       next(err);
     }
