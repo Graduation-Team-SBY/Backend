@@ -78,7 +78,7 @@ export class Controller {
   ) {
     try {
       const { user } = req;
-      const userWallet = await Wallet.find({ userId: user?._id });
+      const userWallet = await Wallet.findOne({ userId: user?._id });
       if (!userWallet) {
         throw { name: 'NotFound' };
       }
