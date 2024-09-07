@@ -14,12 +14,12 @@ export class Controller {
     const session = await startSession();
     try {
       await profileChecker(req.user?._id as ObjectId);
-      const { fee, categoryId, description, address } = req.body;
+      const { fee, description, address } = req.body;
       const newJob = new Job({
         description: description,
         address: address,
         fee: Number(fee),
-        categoryId: new ObjectId(categoryId),
+        categoryId: new ObjectId('66d97dfec793c4c4de7c2db0'),
         clientId: req.user?._id,
       });
       await session.withTransaction(async () => {
@@ -50,12 +50,12 @@ export class Controller {
   static async createJobBelanja(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       await profileChecker(req.user?._id as ObjectId);
-      const { fee, categoryId, description, address } = req.body;
+      const { fee, description, address } = req.body;
       const newJob = new Job({
         description: description,
         address: address,
         fee: Number(fee),
-        categoryId: new ObjectId(categoryId),
+        categoryId: new ObjectId('66d97e7518cd9c2062da3d98'),
         clientId: req.user?._id,
       });
       await newJob.save();
