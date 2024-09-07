@@ -6,6 +6,7 @@ import { Wallet } from '../models/wallet';
 import { uploadSingleImage } from '../services/firebase';
 import { TopUp } from '../models/topup';
 import axios from 'axios'
+import { startSession } from 'mongoose';
 export class Controller {
   static async getProfile(
     req: Request & { user?: { _id: ObjectId } },
@@ -108,6 +109,7 @@ export class Controller {
     res: Response,
     next: NextFunction
   ) {
+    const session = await startSession();
     try {
       const { topupId } = req.body;
       const topup = await TopUp.findOne({topupId: topupId});
@@ -124,12 +126,14 @@ export class Controller {
           Authorization: `Basic ${base64Server}`,
         },
       });
-      if (data.transaction_status === 'capture' && data.status_code === '200') {
-        await Wallet.updateOne({ userId: req.user?._id }, { amount: topup.amount });
-        await topup.updateOne({ status: 'paid' });
-        res.status(200).json({ message: 'Upgrade Success' });
+      if ((data.transaction_status === 'capture' || 'settlement') && data.status_code === '200') {
+        await session.withTransaction(async () => {
+          await Wallet.findOneAndUpdate({ userId: req.user?._id }, { $inc: { amount: topup.amount } });
+          await topup.updateOne({ status: 'paid' });
+        });
+        res.status(200).json({ message: 'TopUp Success' });
       } else {
-        throw { name: 'UpgradeFailed' };
+        throw { name: 'TopUpFailed' };
       }
     } catch (err) {
       next(err);
