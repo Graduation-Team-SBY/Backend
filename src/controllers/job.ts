@@ -7,11 +7,13 @@ import { AuthRequest } from "../types";
 import { JobRequest } from "../models/jobrequest";
 import { JobStatus } from "../models/jobstatus";
 import { Transaction } from "../models/transaction";
+import { profileChecker } from "../helpers/profilechecker";
 
 export class Controller {
   static async createJobBersih(req: AuthRequest, res: Response, next: NextFunction) {
     const session = await startSession();
     try {
+      await profileChecker(req.user?._id as ObjectId);
       const { fee, categoryId, description, address } = req.body;
       const newJob = new Job({
         description: description,
@@ -47,6 +49,7 @@ export class Controller {
 
   static async createJobBelanja(req: AuthRequest, res: Response, next: NextFunction) {
     try {
+      await profileChecker(req.user?._id as ObjectId);
       const { fee, categoryId, description, address } = req.body;
       const newJob = new Job({
         description: description,
@@ -104,6 +107,7 @@ export class Controller {
 
   static async applyJob(req: AuthRequest, res: Response, next: NextFunction) {
     try {
+      await profileChecker(req.user?._id as ObjectId);
       const { jobId } = req.params;
       const newJobReq = new JobRequest({
         jobId: new ObjectId(jobId),

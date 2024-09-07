@@ -5,9 +5,11 @@ import { comparePass, hashPassword } from "../helpers/bcrypt";
 import { signToken } from "../helpers/jwt";
 import { startSession } from "mongoose";
 import { Profile } from "../models/profile";
+import { Wallet } from "../models/wallet";
+import { WorkerProfile } from "../models/workerprofile";
 
 export default class Controller {
-  static async register(req: Request, res: Response, next: NextFunction) {
+  static async clientRegister(req: Request, res: Response, next: NextFunction) {
     const session = await startSession();
     try {
       const { email, phoneNumber, password }: IUserSchema = req.body;
@@ -15,6 +17,7 @@ export default class Controller {
         email,
         phoneNumber,
         password,
+        role: 'client'
       });
       await session.withTransaction(async() => {
         await newUser.validate();
@@ -24,6 +27,41 @@ export default class Controller {
           userId: newUser._id
         });
         await newProfile.save();
+        const newWallet = new Wallet({
+          userId: newUser._id
+        });
+        await newWallet.save({ session });
+        res.status(201).json(newUser);
+      });
+    } catch (err) {
+      next(err);
+    } finally {
+      session.endSession();
+    }
+  }
+
+  static async workerRegister(req: Request, res: Response, next: NextFunction) {
+    const session = await startSession();
+    try {
+      const { email, phoneNumber, password }: IUserSchema = req.body;
+      const newUser = new User({
+        email,
+        phoneNumber,
+        password,
+        role: 'worker'
+      });
+      await session.withTransaction(async() => {
+        await newUser.validate();
+        newUser.password = hashPassword(password);
+        await newUser.save({ session });
+        const newWorkerProfile = new WorkerProfile({
+          userId: newUser._id
+        });
+        await newWorkerProfile.save();
+        const newWallet = new Wallet({
+          userId: newUser._id
+        });
+        await newWallet.save({ session });
         res.status(201).json(newUser);
       });
     } catch (err) {

@@ -50,6 +50,18 @@ export const errorHandler = (
       status = 400;
       message = 'Worker haven\'t confirmed yet';
       break;
+    case 'ProfileRequired':
+      status = 400;
+      message = 'Fill in your profile first!';
+      break;
+    case 'NotFound':
+      status = 404;
+      message = 'Data Not Found!';
+      break;
+    case 'JsonWebTokenError':
+      status = 401;
+      message = 'Invalid access token';
+      break;
   }
   console.log(err);
   res.status(status).json({ message });

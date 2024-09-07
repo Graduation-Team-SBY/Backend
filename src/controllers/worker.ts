@@ -3,19 +3,6 @@ import { ObjectId } from "mongodb";
 import { WorkerProfile } from "../models/workerprofile";
 import { Review } from "../models/review";
 export class Controller {
-  static async createWorker(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
-    try {
-      const { user } = req;
-      const { bio } = req.body;
-
-      const newWorker = new WorkerProfile({ bio, joinDate: new Date(), rating: 0, userId: user?._id });
-      await newWorker.save();
-      res.status(201).json(newWorker);
-    } catch (err) {
-      console.log(err);
-      next(err);
-    }
-  }
   static async getWorkerById(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
     try {
       const { workerId } = req.params;

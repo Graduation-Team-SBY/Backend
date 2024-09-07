@@ -6,7 +6,7 @@ export interface IUser {
   email: string;
   phoneNumber: string;
   password: string;
-  isWorker?: boolean;
+  role: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -28,7 +28,7 @@ export type IProfileSchema = Omit<IProfile, '_id'>;
 
 export interface IWallet {
   _id: ObjectId;
-  amount: number;
+  amount?: number;
   userId: ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
@@ -86,9 +86,11 @@ export type IReviewSchema = Omit<IReview, '_id'>;
 export interface IWorkerProfile {
   _id: ObjectId;
   userId: ObjectId;
-  bio: string;
-  joinDate: Date;
-  rating: number;
+  bio?: string;
+  dateOfBirth?: Date;
+  profilePicture?: string;
+  address?: string;
+  rating?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -122,3 +124,16 @@ export type IJobStatusSchema = Omit<IJobStatus, '_id'>;
 export interface AuthRequest extends Request {
   user?: { _id: ObjectId };
 }
+
+export interface ITopUp {
+  _id: ObjectId;
+  topupId: string;
+  userId: ObjectId;
+  amount: number;
+  transToken: string;
+  status?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export type ITopUpSchema = Omit<ITopUp, '_id'>

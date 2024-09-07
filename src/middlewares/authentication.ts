@@ -50,7 +50,7 @@ export const authWorker = async (req: Request & { user?: { _id: ObjectId } }, re
     if (!findUser) {
       throw {name: 'Unauthenticated'};
     }
-    if (!findUser.isWorker) {
+    if (findUser.role !== 'worker') {
       throw {name: 'Forbidden'};
     }
     req.user = { _id: findUser._id } 
