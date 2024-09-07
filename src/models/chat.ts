@@ -1,9 +1,19 @@
 import { model, Schema } from "mongoose";
-import { IChatSchema } from "../types";
+import { IChatSchema, IChatContent } from "../types";
 
-const categorySchema = new Schema<IChatSchema>({
-  name: { type: String, required: true },
-  description: { type: String, required: true },
+const chatSchema = new Schema<IChatSchema>({
+  contents: {
+    type: [
+      {
+        senderId: Schema.Types.ObjectId,
+        message: Schema.Types.String,
+        createdAt: Schema.Types.Date,
+      },
+    ],
+    default: [],
+  },
+  createdAt: { type: Date, default: new Date() },
+  updatedAt: { type: Date, default: new Date() },
 });
 
-export const Category = model("Category", categorySchema);
+export const Chat = model("Chat", chatSchema);

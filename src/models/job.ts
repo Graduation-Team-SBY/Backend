@@ -1,5 +1,5 @@
-import { model, Schema } from 'mongoose';
-import { IJobSchema } from '../types';
+import { model, Schema } from "mongoose";
+import { IJobSchema } from "../types";
 
 const jobSchema = new Schema<IJobSchema>({
   description: { type: String, required: true },
@@ -9,8 +9,9 @@ const jobSchema = new Schema<IJobSchema>({
   clientId: { type: Schema.Types.ObjectId, required: true },
   workerId: { type: Schema.Types.ObjectId, default: null },
   categoryId: { type: Schema.Types.ObjectId, required: true },
+  chatId: { type: Schema.Types.ObjectId, required: true, default: null },
   createdAt: { type: Date, default: new Date() },
   updatedAt: { type: Date, default: new Date() },
 });
 
-export const Job = model('Job', jobSchema);
+export const Job = model("Job", jobSchema);

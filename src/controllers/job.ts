@@ -107,7 +107,7 @@ export class Controller {
       const { jobId } = req.params;
       const newJobReq = new JobRequest({
         jobId: new ObjectId(jobId),
-        workerId: req.user?._id
+        workerId: req.user?._id,
       });
       await newJobReq.save();
       res.status(201).json(newJobReq);
@@ -121,45 +121,49 @@ export class Controller {
       const { jobId } = req.params;
       const agg = [
         {
-          '$match': {
-            '_id': new ObjectId(jobId)
-          }
-        }, {
-          '$lookup': {
-            'from': 'jobrequests', 
-            'localField': '_id', 
-            'foreignField': 'jobId', 
-            'as': 'workers'
-          }
-        }, {
-          '$lookup': {
-            'from': 'workerprofiles', 
-            'localField': 'workers.workerId', 
-            'foreignField': 'userId', 
-            'as': 'workers',
-            'pipeline': [
+          $match: {
+            _id: new ObjectId(jobId),
+          },
+        },
+        {
+          $lookup: {
+            from: "jobrequests",
+            localField: "_id",
+            foreignField: "jobId",
+            as: "workers",
+          },
+        },
+        {
+          $lookup: {
+            from: "workerprofiles",
+            localField: "workers.workerId",
+            foreignField: "userId",
+            as: "workers",
+            pipeline: [
               {
-                '$lookup': {
-                  'from': 'profiles', 
-                  'localField': 'userId', 
-                  'foreignField': 'userId', 
-                  'as': 'detail'
-                }
-              }, {
-                '$project': {
-                  'detail.dateOfBirth': 0, 
-                  'detail.address': 0
-                }
-              }, {
-                '$unwind': {
-                  'path': '$detail', 
-                  'preserveNullAndEmptyArrays': true
-                }
-              }
-            ]
-          }
-        }
-      ];      
+                $lookup: {
+                  from: "profiles",
+                  localField: "userId",
+                  foreignField: "userId",
+                  as: "detail",
+                },
+              },
+              {
+                $project: {
+                  "detail.dateOfBirth": 0,
+                  "detail.address": 0,
+                },
+              },
+              {
+                $unwind: {
+                  path: "$detail",
+                  preserveNullAndEmptyArrays: true,
+                },
+              },
+            ],
+          },
+        },
+      ];
       const workers = await Job.aggregate(agg);
       res.status(200).json(workers[0]);
     } catch (err) {
@@ -174,16 +178,16 @@ export class Controller {
       const objIdJob = new ObjectId(jobId);
       const job = await Job.findById(objIdJob);
       if (job?.workerId !== null) {
-        throw {name: 'WorkerPicked'}
+        throw { name: "WorkerPicked" };
       }
       await session.withTransaction(async () => {
-        await Job.updateOne({_id: objIdJob}, {workerId: new ObjectId(workerId)}, { session });
+        await Job.updateOne({ _id: objIdJob }, { workerId: new ObjectId(workerId) }, { session });
         const newJobStatus = new JobStatus({
-          jobId: objIdJob
+          jobId: objIdJob,
         });
-        await newJobStatus.save({session});
+        await newJobStatus.save({ session });
       });
-      res.status(200).json({message: 'Successfully picked worker'});
+      res.status(200).json({ message: "Successfully picked worker" });
     } catch (err) {
       next(err);
     } finally {
@@ -195,7 +199,7 @@ export class Controller {
     try {
       const { jobId } = req.params;
       await JobStatus.updateOne({ jobId: new ObjectId(jobId) }, { isWorkerConfirmed: true });
-      res.status(200).json({message: 'Successfully update job status'});
+      res.status(200).json({ message: "Successfully update job status" });
     } catch (err) {
       next(err);
     }
@@ -206,21 +210,21 @@ export class Controller {
     try {
       const { jobId } = req.params;
       const objJobId = new ObjectId(jobId);
-      const findJobStatus = await JobStatus.findOne({  jobId: objJobId });
+      const findJobStatus = await JobStatus.findOne({ jobId: objJobId });
       if (findJobStatus?.isWorkerConfirmed === false) {
-        throw {name: 'NotConfirmed'};
+        throw { name: "NotConfirmed" };
       }
       await session.withTransaction(async () => {
         await findJobStatus?.updateOne({ isClientConfirmed: true, isDone: true }, { session });
-        const job = await Job.findById(objJobId, '_id clientId workerId');
+        const job = await Job.findById(objJobId, "_id clientId workerId");
         const newTransaction = new Transaction({
           clientId: job?.clientId,
           workerId: job?.workerId,
-          jobId: objJobId
+          jobId: objJobId,
         });
-        await newTransaction.save({session})
-      })
-      res.status(200).json({message: 'Successfully update job order status'});
+        await newTransaction.save({ session });
+      });
+      res.status(200).json({ message: "Successfully update job order status" });
     } catch (err) {
       next(err);
     } finally {
@@ -257,7 +261,6 @@ export class Controller {
     try {
       const { senderId, message, createdAt } = req.body;
       const { jobId } = req.params;
-      const chats = await 
     } catch (err) {
       next(err);
     }

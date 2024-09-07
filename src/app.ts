@@ -7,14 +7,13 @@ import { Server } from "socket.io";
 import { createServer } from "node:http";
 import cors from "cors";
 import { socketFunc } from "./services/socket";
-import { SocketChatData } from "./types";
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
 }
 
 export const app = express();
 export const server = createServer(app);
-export const io = new Server<SocketChatData>(server, {
+export const io = new Server(server, {
   cors: {
     origin: "*",
   },

@@ -1,5 +1,5 @@
-import { ObjectId } from 'mongodb';
-import { Request } from 'express';
+import { ObjectId } from "mongodb";
+import { Request } from "express";
 
 export interface IUser {
   _id: ObjectId;
@@ -11,7 +11,7 @@ export interface IUser {
   updatedAt?: Date;
 }
 
-export type IUserSchema = Omit<IUser, '_id'>;
+export type IUserSchema = Omit<IUser, "_id">;
 
 export interface IProfile {
   _id: ObjectId;
@@ -24,7 +24,7 @@ export interface IProfile {
   updatedAt?: Date;
 }
 
-export type IProfileSchema = Omit<IProfile, '_id'>;
+export type IProfileSchema = Omit<IProfile, "_id">;
 
 export interface IWallet {
   _id: ObjectId;
@@ -34,7 +34,7 @@ export interface IWallet {
   updatedAt?: Date;
 }
 
-export type IWalletSchema = Omit<IWallet, '_id'>;
+export type IWalletSchema = Omit<IWallet, "_id">;
 
 export interface ICategory {
   _id: ObjectId;
@@ -44,7 +44,7 @@ export interface ICategory {
   updatedAt?: Date;
 }
 
-export type ICategorySchema = Omit<ICategory, '_id'>;
+export type ICategorySchema = Omit<ICategory, "_id">;
 
 export interface IJob {
   _id: ObjectId;
@@ -55,11 +55,12 @@ export interface IJob {
   clientId: ObjectId;
   workerId?: ObjectId;
   categoryId: ObjectId;
+  chatId: ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-export type IJobSchema = Omit<IJob, '_id'>;
+export type IJobSchema = Omit<IJob, "_id">;
 
 export interface IJobRequest {
   _id: ObjectId;
@@ -69,7 +70,7 @@ export interface IJobRequest {
   updatedAt?: Date;
 }
 
-export type IJobRequestSchema = Omit<IJobRequest, '_id'>;
+export type IJobRequestSchema = Omit<IJobRequest, "_id">;
 
 export interface IReview {
   _id: ObjectId;
@@ -81,7 +82,7 @@ export interface IReview {
   updatedAt?: Date;
 }
 
-export type IReviewSchema = Omit<IReview, '_id'>;
+export type IReviewSchema = Omit<IReview, "_id">;
 
 export interface IWorkerProfile {
   _id: ObjectId;
@@ -93,7 +94,7 @@ export interface IWorkerProfile {
   updatedAt?: Date;
 }
 
-export type IWorkerProfileSchema = Omit<IWorkerProfile, '_id'>;
+export type IWorkerProfileSchema = Omit<IWorkerProfile, "_id">;
 
 export interface ITransaction {
   _id: ObjectId;
@@ -104,7 +105,7 @@ export interface ITransaction {
   updatedAt?: Date;
 }
 
-export type ITransactionSchema = Omit<ITransaction, '_id'>;
+export type ITransactionSchema = Omit<ITransaction, "_id">;
 
 export interface IJobStatus {
   _id: ObjectId;
@@ -116,7 +117,7 @@ export interface IJobStatus {
   updatedAt?: Date;
 }
 
-export type IJobStatusSchema = Omit<IJobStatus, '_id'>;
+export type IJobStatusSchema = Omit<IJobStatus, "_id">;
 
 // ! REQUEST TYPES
 export interface AuthRequest extends Request {
@@ -125,13 +126,17 @@ export interface AuthRequest extends Request {
 
 // ? Socket for chat types
 export interface IChatContent {
-  senderId: ObjectId;
+  // make this required when integrated
+  senderId?: ObjectId;
   message: string;
   createdAt: Date;
 }
 
 export interface IChat {
   _id: ObjectId;
+  contents: IChatContent[];
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export type IChatSchema = Omit<IChat, "_id">;
