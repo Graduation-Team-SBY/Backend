@@ -12,8 +12,27 @@ export class Controller {
   static async getProfile(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
     try {
       const { user } = req;
-      const data = await Profile.findOne({ userId: user?._id });
-      res.status(200).json(data);
+      let data = await Profile.aggregate([
+        {
+          $match: { userId: user?._id },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "userData",
+          },
+        },
+        {
+          $unwind: {
+            path: "$userData",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        { $project: { "userData.password": 0 } },
+      ]);
+      res.status(200).json(data[0]);
     } catch (err) {
       console.log(err);
       next(err);
