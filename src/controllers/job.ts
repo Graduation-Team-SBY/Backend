@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { Job } from "../models/job";
 import { ObjectId } from "mongodb";
 import { uploadImageFiles, uploadWorkerConfirm } from "../services/firebase";
-import { startSession } from "mongoose";
+import { SortOrder, startSession } from "mongoose";
 import { AuthRequest } from "../types";
 import { JobRequest } from "../models/jobrequest";
 import { JobStatus } from "../models/jobstatus";
@@ -67,14 +67,62 @@ export class Controller {
 
   static async activeJobsClient(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { categoryId } = req.query;
-      const query: { clientId: ObjectId; categoryId?: ObjectId } = {
-        clientId: req.user?._id as ObjectId,
-      };
-      if (categoryId) {
-        query.categoryId = new ObjectId(categoryId as string);
+      const { category , sort } = req.query;
+
+      let sortOrder = -1;
+      if (sort === 'asc') {
+        sortOrder = 1;
       }
-      const jobs = await Job.find(query).sort({ createdAt: -1 });
+      if ( sort === 'desc' ) {
+        sortOrder = -1;
+      }
+
+      const agg : any = [
+        {
+          '$match' : {
+            'clientId': req.user?._id
+          }
+        }, {
+          '$lookup': {
+            'from': 'categories', 
+            'localField': 'categoryId', 
+            'foreignField': '_id', 
+            'as': 'category'
+          }
+        }, {
+          '$lookup': {
+            'from': 'jobstatuses', 
+            'localField': '_id', 
+            'foreignField': 'jobId', 
+            'as': 'status'
+          }
+        }, {
+          '$unwind': {
+            'path': '$status', 
+            'preserveNullAndEmptyArrays': true
+          }
+        }, {
+          '$match': {
+            '$or': [
+              {
+                'status.isDone': false
+              }, {
+                'status': null
+              }
+            ]
+          }
+        }
+      ];
+
+      if (category) {
+        agg.push({
+          '$match' : {
+            'category.name': category
+          }
+        })
+      }
+
+      const jobs = await Job.aggregate(agg).unwind('category').sort({ createdAt: sortOrder as SortOrder })
       res.status(200).json(jobs);
     } catch (err) {
       next(err);

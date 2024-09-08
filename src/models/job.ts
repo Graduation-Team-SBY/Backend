@@ -9,7 +9,7 @@ const jobSchema = new Schema<IJobSchema>({
   clientId: { type: Schema.Types.ObjectId, required: true },
   workerId: { type: Schema.Types.ObjectId, default: null },
   categoryId: { type: Schema.Types.ObjectId, required: true },
-  chatId: { type: Schema.Types.ObjectId, required: true, default: null },
+  chatId: { type: Schema.Types.ObjectId, default: null },
   createdAt: { type: Date, default: new Date() },
   updatedAt: { type: Date, default: new Date() },
 });

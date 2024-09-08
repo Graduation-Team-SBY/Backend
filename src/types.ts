@@ -55,7 +55,7 @@ export interface IJob {
   clientId: ObjectId;
   workerId?: ObjectId;
   categoryId: ObjectId;
-  chatId: ObjectId;
+  chatId?: ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
 }
