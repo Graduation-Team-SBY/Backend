@@ -32,7 +32,7 @@ export class Controller {
         },
         { $project: { "userData.password": 0 } },
       ]);
-      res.status(200).json(data);
+      res.status(200).json(data[0]);
     } catch (err) {
       console.log(err);
       next(err);
