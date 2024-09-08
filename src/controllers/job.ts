@@ -26,7 +26,6 @@ export class Controller {
       await session.withTransaction(async () => {
         const wallet = await Wallet.findOne({ userId: req.user?._id }, {} , { session });
         if (wallet?.amount as number >= fee) {
-          console.log(Number(fee));
           await wallet?.updateOne({ $inc: { amount: -(Number(fee)) } }, { session });
         } else {
           throw {name: 'NotEnoughMoney'};
@@ -70,7 +69,6 @@ export class Controller {
       await session.withTransaction(async () => {
         const wallet = await Wallet.findOne({ userId: req.user?._id }, {} , { session });
         if (wallet?.amount as number >= fee) {
-          console.log(Number(fee));
           await wallet?.updateOne({ $inc: { amount: -(Number(fee)) } }, { session });
         } else {
           throw {name: 'NotEnoughMoney'};
