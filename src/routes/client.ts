@@ -2,6 +2,7 @@ import { Router } from "express";
 import { authentication } from "../middlewares/authentication";
 import { Controller as JobController } from "../controllers/job";
 import multer from "multer";
+import { Controller as ProfileController } from "../controllers/profile";
 import { authorization } from "../middlewares/authorization";
 import Controller from "../controllers";
 
@@ -10,6 +11,8 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 router.post("/register", Controller.clientRegister);
+router.patch("/profile", authentication, upload.single("image"), ProfileController.updateProfileClient);
+router.get("/profile", authentication, ProfileController.getProfile);
 router.get('/jobs/active', authentication, JobController.activeJobsClient);
 router.post("/jobs/bersih", authentication, upload.array("image", 4), JobController.createJobBersih);
 router.post("/jobs/belanja", authentication, JobController.createJobBelanja);

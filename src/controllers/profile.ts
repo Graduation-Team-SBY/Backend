@@ -8,6 +8,7 @@ import { TopUp } from "../models/topup";
 import axios from "axios";
 import { startSession } from "mongoose";
 import { getDateRange } from "../helpers/dateFormatter";
+import { WorkerProfile } from "../models/workerprofile";
 export class Controller {
   static async getProfile(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
     try {
@@ -39,7 +40,7 @@ export class Controller {
     }
   }
 
-  static async updateProfile(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
+  static async updateProfileClient(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
     const session = await startSession();
     try {
       const { name, dateOfBirth, address } = req.body;
@@ -60,13 +61,48 @@ export class Controller {
         updateProfile.dateOfBirth = new Date(dateOfBirth);
         updateProfile.profilePicture = profilePictureUrl;
         updateProfile.address = address;
-        updateProfile.save({ session });
+        await updateProfile.save({ session });
       });
 
       res.status(200).json({ message: "Successfully updated profile" });
     } catch (err) {
       console.log(err);
       next(err);
+    } finally {
+      await session.endSession();
+    }
+  }
+  static async updateProfileWorker(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
+    const session = await startSession();
+    try {
+      const { name, dateOfBirth, address, bio } = req.body;
+      const { user } = req;
+      const updateProfile = await WorkerProfile.findOne({ userId: user?._id });
+      if (!updateProfile) {
+        throw { name: "NotFound" };
+      }
+      await session.withTransaction(async () => {
+        if (!req.file) {
+          throw { name: "ImageNotFound" };
+        }
+        const profilePictureUrl = await uploadProfileImage(req.file as Express.Multer.File, req.user?._id);
+        if (!profilePictureUrl) {
+          throw { name: "ImageNotFound" };
+        }
+        updateProfile.name = name;
+        updateProfile.dateOfBirth = new Date(dateOfBirth);
+        updateProfile.profilePicture = profilePictureUrl;
+        updateProfile.address = address;
+        updateProfile.bio = bio;
+        await updateProfile.save({ session });
+      });
+
+      res.status(200).json({ message: "Successfully updated profile" });
+    } catch (err) {
+      console.log(err);
+      next(err);
+    } finally {
+      await session.endSession();
     }
   }
 
