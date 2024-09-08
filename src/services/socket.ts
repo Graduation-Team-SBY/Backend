@@ -13,7 +13,7 @@ export const socketFunc = (io: any) => {
         if (!currJob) {
           throw "JobNotFound";
         }
-        chatId = currJob._id || (await Chat.create({}))._id;
+        chatId = currJob.chatId || (await Chat.create({}))._id;
         if (!currJob.chatId) {
           currJob.chatId = chatId;
           await currJob.save();
