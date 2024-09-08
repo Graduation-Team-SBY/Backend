@@ -375,6 +375,38 @@ export class Controller {
     }
   }
 
+  static async getCurrentJob(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const agg = [
+        {
+          '$match': {
+            'workerId': req.user?._id
+          }
+        }, {
+          '$lookup': {
+            'from': 'jobstatuses', 
+            'localField': '_id', 
+            'foreignField': 'jobId', 
+            'as': 'status'
+          }
+        }, {
+          '$unwind': {
+            'path': '$status', 
+            'preserveNullAndEmptyArrays': true
+          }
+        }, {
+          '$match': {
+            'status.isDone': false
+          }
+        }
+      ];
+      const currentJob = await Job.aggregate(agg);
+      res.status(200).json(currentJob);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   // static async template(req: Request, res: Response, next: NextFunction) {
   //   try {
 

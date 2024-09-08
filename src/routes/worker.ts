@@ -15,6 +15,7 @@ router.post("/register", Controller.workerRegister);
 router.get("/profile", authentication, WorkerController.getWorkerById);
 router.patch("/profile", authentication, upload.single("image"), ProfileController.updateProfileWorker);
 router.get("/profile/reviews", authentication, WorkerController.getWorkerReviews);
+router.get('/job', authWorker, JobController.getCurrentJob);
 router.get("/jobs/worker", authWorker, JobController.allJobsWorker);
 router.patch("/jobs/:jobId/worker", authWorker, authorWorker, upload.array("image", 4), JobController.workerConfirm);
 router.post("/jobs/:jobId", authWorker, JobController.applyJob);
