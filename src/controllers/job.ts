@@ -56,6 +56,7 @@ export class Controller {
   }
 
   static async createJobBelanja(req: AuthRequest, res: Response, next: NextFunction) {
+    const session = await startSession();
     try {
       await profileChecker(req.user?._id as ObjectId);
       const { fee, description, address } = req.body;
@@ -66,10 +67,21 @@ export class Controller {
         categoryId: new ObjectId("66d97e7518cd9c2062da3d98"),
         clientId: req.user?._id,
       });
-      await newJob.save();
+      await session.withTransaction(async () => {
+        const wallet = await Wallet.findOne({ userId: req.user?._id }, {} , { session });
+        if (wallet?.amount as number >= fee) {
+          console.log(Number(fee));
+          await wallet?.updateOne({ $inc: { amount: -(Number(fee)) } }, { session });
+        } else {
+          throw {name: 'NotEnoughMoney'};
+        }
+        await newJob.save({ session });
+      });
       res.status(201).json({ message: "Job is successfully created!" });
     } catch (err) {
       next(err);
+    } finally {
+      await session.endSession();
     }
   }
 
