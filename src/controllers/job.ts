@@ -8,6 +8,7 @@ import { JobRequest } from "../models/jobrequest";
 import { JobStatus } from "../models/jobstatus";
 import { Transaction } from "../models/transaction";
 import { profileChecker, profileWorkerChecker } from "../helpers/profilechecker";
+import { Wallet } from "../models/wallet";
 
 export class Controller {
   static async createJobBersih(req: AuthRequest, res: Response, next: NextFunction) {
@@ -23,6 +24,13 @@ export class Controller {
         clientId: req.user?._id,
       });
       await session.withTransaction(async () => {
+        const wallet = await Wallet.findOne({ userId: req.user?._id }, {} , { session });
+        if (wallet?.amount as number >= fee) {
+          console.log(Number(fee));
+          await wallet?.updateOne({ $inc: { amount: -(Number(fee)) } }, { session });
+        } else {
+          throw {name: 'NotEnoughMoney'};
+        }
         await newJob.save({ session });
         if (!req.files) {
           throw { name: "ImageNotFound" };
@@ -297,6 +305,7 @@ export class Controller {
           workerId: job?.workerId,
           jobId: objJobId,
         });
+        await Wallet.findOneAndUpdate({ userId: job?.workerId }, { $inc: { amount: job?.fee } });
         await newTransaction.save({ session });
       });
       res.status(200).json({ message: "Successfully update job order status" });

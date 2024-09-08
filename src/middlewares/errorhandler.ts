@@ -62,6 +62,10 @@ export const errorHandler = (
       status = 401;
       message = 'Invalid access token';
       break;
+    case 'NotEnoughMoney':
+      status = 400;
+      message = 'You don\'t have enough money!';
+      break;
   }
   console.log(err);
   res.status(status).json({ message });
