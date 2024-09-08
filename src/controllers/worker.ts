@@ -2,24 +2,44 @@ import { Request, NextFunction, Response } from "express";
 import { ObjectId } from "mongodb";
 import { WorkerProfile } from "../models/workerprofile";
 import { Review } from "../models/review";
+import { AuthRequest } from "../types";
 export class Controller {
-  static async getWorkerById(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
+  static async getWorkerById(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { workerId } = req.params;
-      const foundWorker = await WorkerProfile.findById(workerId);
-      if (!foundWorker) {
+      const { user } = req;
+      const foundWorker = await WorkerProfile.aggregate([
+        {
+          $match: { userId: user?._id },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "_id",
+            as: "userData",
+          },
+        },
+        {
+          $unwind: {
+            path: "$userData",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        { $project: { "userData.password": 0 } },
+      ]);
+      if (!foundWorker[0]) {
         throw { name: "NotFound" };
       }
-      res.status(201).json(foundWorker);
+      res.status(200).json(foundWorker);
     } catch (err) {
       console.log(err);
       next(err);
     }
   }
-  static async getWorkerReviews(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
+  static async getWorkerReviews(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { workerId } = req.params;
-      const foundWorker = await WorkerProfile.findById(workerId);
+      const { user } = req;
+      const foundWorker = await WorkerProfile.findOne({ userId: user?._id });
       if (!foundWorker) {
         throw { name: "NotFound" };
       }
@@ -37,7 +57,7 @@ export class Controller {
         },
         {
           $match: {
-            "transaction.workerId": workerId,
+            "transaction.workerId": foundWorker._id,
           },
         },
         {
