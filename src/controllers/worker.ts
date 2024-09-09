@@ -30,7 +30,7 @@ export class Controller {
       if (!foundWorker[0]) {
         throw { name: "NotFound" };
       }
-      res.status(200).json(foundWorker);
+      res.status(200).json(foundWorker[0]);
     } catch (err) {
       console.log(err);
       next(err);
