@@ -19,3 +19,4 @@ router.post("/jobs/belanja", authentication, JobController.createJobBelanja);
 router.get('/jobs/:jobId/workers', authentication, JobController.getWorkerList);
 router.patch('/jobs/:jobId/client', authentication, authorization, JobController.clientConfirm);
 router.patch('/jobs/:jobId/:workerId', authentication, authorization, JobController.pickWorker);
+router.delete('/jobs/:jobId', authentication, authorization, JobController.cancelJob);
