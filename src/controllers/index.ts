@@ -7,6 +7,7 @@ import { startSession } from "mongoose";
 import { Profile } from "../models/profile";
 import { Wallet } from "../models/wallet";
 import { WorkerProfile } from "../models/workerprofile";
+import { transporter } from "../config/nodemailer";
 
 export default class Controller {
   static async clientRegister(req: Request, res: Response, next: NextFunction) {
@@ -17,21 +18,28 @@ export default class Controller {
         email,
         phoneNumber,
         password,
-        role: 'client'
+        role: "client",
       });
-      await session.withTransaction(async() => {
+      await session.withTransaction(async () => {
         await newUser.validate();
         newUser.password = hashPassword(password);
         await newUser.save({ session });
         const newProfile = new Profile({
-          userId: newUser._id
+          userId: newUser._id,
         });
         await newProfile.save();
         const newWallet = new Wallet({
-          userId: newUser._id
+          userId: newUser._id,
         });
         await newWallet.save({ session });
         res.status(201).json(newUser);
+        const mailOpt = {
+          from: "muhfarros28@gmail.com",
+          to: email,
+          subject: "Welcome to YangTu App!",
+          text: "You have successfully registered to YangTu App, you can use our Berbersih dan Nitip features!",
+        };
+        await transporter.sendMail(mailOpt);
       });
     } catch (err) {
       next(err);
@@ -48,21 +56,28 @@ export default class Controller {
         email,
         phoneNumber,
         password,
-        role: 'worker'
+        role: "worker",
       });
-      await session.withTransaction(async() => {
+      await session.withTransaction(async () => {
         await newUser.validate();
         newUser.password = hashPassword(password);
         await newUser.save({ session });
         const newWorkerProfile = new WorkerProfile({
-          userId: newUser._id
+          userId: newUser._id,
         });
         await newWorkerProfile.save();
         const newWallet = new Wallet({
-          userId: newUser._id
+          userId: newUser._id,
         });
         await newWallet.save({ session });
         res.status(201).json(newUser);
+        const mailOpt = {
+          from: "muhfarros28@gmail.com",
+          to: email,
+          subject: "Welcome to our YangTu App!",
+          text: "You have successfully registered to YangTu App, you can work now to gain money!",
+        };
+        await transporter.sendMail(mailOpt);
       });
     } catch (err) {
       next(err);

@@ -50,16 +50,17 @@ export class Controller {
         throw { name: "NotFound" };
       }
       await session.withTransaction(async () => {
-        if (!req.file) {
-          throw { name: "ImageNotFound" };
+        // if (!req.file) {
+        //   throw { name: "ImageNotFound" };
+        // }
+        if (req.file) {
+          updateProfile.profilePicture = await uploadProfileImage(req.file as Express.Multer.File, req.user?._id);
         }
-        const profilePictureUrl = await uploadProfileImage(req.file as Express.Multer.File, req.user?._id);
-        if (!profilePictureUrl) {
-          throw { name: "ImageNotFound" };
-        }
+        // if (!profilePictureUrl) {
+        //   throw { name: "ImageNotFound" };
+        // }
         updateProfile.name = name;
         updateProfile.dateOfBirth = new Date(dateOfBirth);
-        updateProfile.profilePicture = profilePictureUrl;
         updateProfile.address = address;
         await updateProfile.save({ session });
       });
@@ -109,7 +110,7 @@ export class Controller {
   static async getOrderHistories(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
     try {
       const { user } = req;
-      const { sort = "asc", filter = "week" } = req.query;
+      const { sort = "asc", filter = "month" } = req.query;
       let dateFilter = {};
       if (filter) {
         const { startDate, endDate } = getDateRange(filter as "week" | "month" | "year");
@@ -120,10 +121,62 @@ export class Controller {
           },
         };
       }
-      const orderHistories = await Transaction.find({ clientId: user?._id, ...dateFilter }).sort({ createdAt: sort === "desc" ? -1 : 1 });
-      if (!orderHistories[0]) {
+      const orderHistories = await Transaction.aggregate([
+        {
+          $match: { clientId: user?._id, ...dateFilter },
+        },
+        {
+          $lookup: {
+            from: "profiles",
+            foreignField: "userId",
+            localField: "clientId",
+            as: "profile",
+          },
+        },
+        {
+          $unwind: { preserveNullAndEmptyArrays: true, path: "$profile" },
+        },
+        {
+          $lookup: {
+            from: "jobs",
+            foreignField: "_id",
+            localField: "jobId",
+            as: "jobDetail",
+          },
+        },
+        {
+          $unwind: {
+            preserveNullAndEmptyArrays: true,
+            path: "$jobDetail",
+          },
+        },
+        {
+          $lookup: {
+            from: "categories",
+            foreignField: "_id",
+            localField: "jobDetail.categoryId",
+            as: "categoryDetail",
+          },
+        },
+        { $unwind: { preserveNullAndEmptyArrays: true, path: "$categoryDetail" } },
+        {
+          $addFields: {
+            "jobDetail.categoryName": "$categoryDetail.name",
+          },
+        },
+        {
+          $sort: { createdAt: sort === "desc" ? -1 : 1 },
+        },
+        {
+          $project: {
+            categoryDetail: 0,
+          },
+        },
+      ]);
+      if (!orderHistories) {
         throw { name: "NotFound" };
       }
+
       res.status(200).json(orderHistories);
     } catch (err) {
       console.log(err);
