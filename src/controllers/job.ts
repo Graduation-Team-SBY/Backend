@@ -65,18 +65,20 @@ export class Controller {
     const session = await startSession();
     try {
       await profileChecker(req.user?._id as ObjectId);
-      const { fee, description, address } = req.body;
+      const { fee, description, address, coordinates, addressNotes } = req.body;
       const newJob = new Job({
         description: description,
         address: address,
+        coordinates,
+        addressNotes,
         fee: Number(fee),
         categoryId: new ObjectId("66d97e7518cd9c2062da3d98"),
         clientId: req.user?._id,
       });
       await session.withTransaction(async () => {
         const wallet = await Wallet.findOne({ userId: req.user?._id }, {}, { session });
-        if ((wallet?.amount as number) >= fee) {
-          await wallet?.updateOne({ $inc: { amount: -Number(fee) } }, { session });
+        if ((wallet?.amount as number) >= Number(fee) + 2000) {
+          await wallet?.updateOne({ $inc: { amount: -Number(fee) - 2000 } }, { session });
         } else {
           throw { name: "NotEnoughMoney" };
         }
