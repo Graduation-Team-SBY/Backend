@@ -115,6 +115,7 @@ export interface IJobStatus {
   jobId: ObjectId;
   isWorkerConfirmed?: boolean;
   isClientConfirmed?: boolean;
+  confirmationImages?: string[];
   isDone?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
