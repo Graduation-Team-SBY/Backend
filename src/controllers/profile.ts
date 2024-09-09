@@ -122,7 +122,7 @@ export class Controller {
         };
       }
       const orderHistories = await Transaction.find({ clientId: user?._id, ...dateFilter }).sort({ createdAt: sort === "desc" ? -1 : 1 });
-      if (!orderHistories[0]) {
+      if (!orderHistories) {
         throw { name: "NotFound" };
       }
       res.status(200).json(orderHistories);
