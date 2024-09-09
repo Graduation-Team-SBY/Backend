@@ -120,11 +120,66 @@ export class Controller {
             $lte: endDate,
           },
         };
+        console.log(dateFilter);
       }
-      const orderHistories = await Transaction.find({ clientId: user?._id, ...dateFilter }).sort({ createdAt: sort === "desc" ? -1 : 1 });
+      // data client
+      //  data category
+      const orderHistories = await Transaction.aggregate([
+        {
+          $match: { clientId: user?._id },
+        },
+        {
+          $lookup: {
+            from: "profiles",
+            foreignField: "userId",
+            localField: "clientId",
+            as: "profile",
+          },
+        },
+        {
+          $unwind: { preserveNullAndEmptyArrays: true, path: "$profile" },
+        },
+        {
+          $lookup: {
+            from: "jobs",
+            foreignField: "_id",
+            localField: "jobId",
+            as: "jobDetail",
+          },
+        },
+        {
+          $unwind: {
+            preserveNullAndEmptyArrays: true,
+            path: "$jobDetail",
+          },
+        },
+        {
+          $lookup: {
+            from: "categories",
+            foreignField: "_id",
+            localField: "jobDetail.categoryId",
+            as: "categoryDetail",
+          },
+        },
+        { $unwind: { preserveNullAndEmptyArrays: true, path: "$categoryDetail" } },
+        {
+          $addFields: {
+            "jobDetail.categoryName": "$categoryDetail.name",
+          },
+        },
+        {
+          $sort: { createdAt: sort === "desc" ? -1 : 1 },
+        },
+        {
+          $project: {
+            categoryDetail: 0,
+          },
+        },
+      ]);
       if (!orderHistories) {
         throw { name: "NotFound" };
       }
+
       res.status(200).json(orderHistories);
     } catch (err) {
       console.log(err);
