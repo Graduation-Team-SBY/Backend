@@ -19,6 +19,8 @@ export interface IProfile {
   dateOfBirth?: Date;
   profilePicture?: string;
   address?: string;
+  coordinates?: string;
+  addressNotes?: string;
   userId: ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
@@ -92,6 +94,8 @@ export interface IWorkerProfile {
   dateOfBirth?: Date;
   profilePicture?: string;
   address?: string;
+  coordinates?: string;
+  addressNotes?: string;
   rating?: number;
   createdAt?: Date;
   updatedAt?: Date;
@@ -115,6 +119,7 @@ export interface IJobStatus {
   jobId: ObjectId;
   isWorkerConfirmed?: boolean;
   isClientConfirmed?: boolean;
+  confirmationImages?: string[];
   isDone?: boolean;
   createdAt?: Date;
   updatedAt?: Date;

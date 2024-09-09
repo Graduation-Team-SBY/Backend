@@ -70,6 +70,10 @@ export const errorHandler = (
       status = 403;
       message = 'You cannot cancel this job order!';
       break;
+    case 'ImageNotFound':
+      status = 400;
+      message = 'Failed to upload image, please try again!';
+      break;
   }
   console.log(err);
   res.status(status).json({ message });
