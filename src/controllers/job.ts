@@ -24,11 +24,11 @@ export class Controller {
         clientId: req.user?._id,
       });
       await session.withTransaction(async () => {
-        const wallet = await Wallet.findOne({ userId: req.user?._id }, {} , { session });
-        if (wallet?.amount as number >= fee) {
-          await wallet?.updateOne({ $inc: { amount: -(Number(fee)) } }, { session });
+        const wallet = await Wallet.findOne({ userId: req.user?._id }, {}, { session });
+        if ((wallet?.amount as number) >= fee) {
+          await wallet?.updateOne({ $inc: { amount: -Number(fee) } }, { session });
         } else {
-          throw {name: 'NotEnoughMoney'};
+          throw { name: "NotEnoughMoney" };
         }
         await newJob.save({ session });
         if (!req.files) {
@@ -67,11 +67,11 @@ export class Controller {
         clientId: req.user?._id,
       });
       await session.withTransaction(async () => {
-        const wallet = await Wallet.findOne({ userId: req.user?._id }, {} , { session });
-        if (wallet?.amount as number >= fee) {
-          await wallet?.updateOne({ $inc: { amount: -(Number(fee)) } }, { session });
+        const wallet = await Wallet.findOne({ userId: req.user?._id }, {}, { session });
+        if ((wallet?.amount as number) >= fee) {
+          await wallet?.updateOne({ $inc: { amount: -Number(fee) } }, { session });
         } else {
-          throw {name: 'NotEnoughMoney'};
+          throw { name: "NotEnoughMoney" };
         }
         await newJob.save({ session });
       });
@@ -85,62 +85,69 @@ export class Controller {
 
   static async activeJobsClient(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { category , sort } = req.query;
+      const { category, sort } = req.query;
 
       let sortOrder = -1;
-      if (sort === 'asc') {
+      if (sort === "asc") {
         sortOrder = 1;
       }
-      if ( sort === 'desc' ) {
+      if (sort === "desc") {
         sortOrder = -1;
       }
 
-      const agg : any = [
+      const agg: any = [
         {
-          '$match' : {
-            'clientId': req.user?._id
-          }
-        }, {
-          '$lookup': {
-            'from': 'categories', 
-            'localField': 'categoryId', 
-            'foreignField': '_id', 
-            'as': 'category'
-          }
-        }, {
-          '$lookup': {
-            'from': 'jobstatuses', 
-            'localField': '_id', 
-            'foreignField': 'jobId', 
-            'as': 'status'
-          }
-        }, {
-          '$unwind': {
-            'path': '$status', 
-            'preserveNullAndEmptyArrays': true
-          }
-        }, {
-          '$match': {
-            '$or': [
+          $match: {
+            clientId: req.user?._id,
+          },
+        },
+        {
+          $lookup: {
+            from: "categories",
+            localField: "categoryId",
+            foreignField: "_id",
+            as: "category",
+          },
+        },
+        {
+          $lookup: {
+            from: "jobstatuses",
+            localField: "_id",
+            foreignField: "jobId",
+            as: "status",
+          },
+        },
+        {
+          $unwind: {
+            path: "$status",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $match: {
+            $or: [
               {
-                'status.isDone': false
-              }, {
-                'status': null
-              }
-            ]
-          }
-        }
+                "status.isDone": false,
+              },
+              {
+                status: null,
+              },
+            ],
+          },
+        },
       ];
 
       if (category) {
         agg.push({
-          '$match' : {
-            'category.name': category
-          }
-        })
+          $match: {
+            "category.name": category,
+          },
+        });
       }
 
-      const jobs = await Job.aggregate(agg).unwind('category').sort({ createdAt: sortOrder as SortOrder })
+      const jobs = await Job.aggregate(agg)
+        .unwind("category")
+        .sort({ createdAt: sortOrder as SortOrder });
       res.status(200).json(jobs);
     } catch (err) {
       next(err);
@@ -287,6 +294,7 @@ export class Controller {
         if (!filesUrl.length) {
           throw { name: "ImageNotFound" };
         }
+        updateJobStat.confirmationImages = filesUrl;
         updateJobStat.isWorkerConfirmed = true;
         await updateJobStat.save({ session });
       });
@@ -379,26 +387,29 @@ export class Controller {
     try {
       const agg = [
         {
-          '$match': {
-            'workerId': req.user?._id
-          }
-        }, {
-          '$lookup': {
-            'from': 'jobstatuses', 
-            'localField': '_id', 
-            'foreignField': 'jobId', 
-            'as': 'status'
-          }
-        }, {
-          '$unwind': {
-            'path': '$status', 
-            'preserveNullAndEmptyArrays': true
-          }
-        }, {
-          '$match': {
-            'status.isDone': false
-          }
-        }
+          $match: {
+            workerId: req.user?._id,
+          },
+        },
+        {
+          $lookup: {
+            from: "jobstatuses",
+            localField: "_id",
+            foreignField: "jobId",
+            as: "status",
+          },
+        },
+        {
+          $unwind: {
+            path: "$status",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $match: {
+            "status.isDone": false,
+          },
+        },
       ];
       const currentJob = await Job.aggregate(agg);
       res.status(200).json(currentJob);
