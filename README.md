@@ -56,7 +56,8 @@ Description:
 _Response (201 - created)_
 ```json
 {
-    "access_token": "String"
+    "access_token": "String",
+    "role": "String"
 }
 ```
 
@@ -147,7 +148,8 @@ _Response (200 - OK)_
         "workerId": "ObjectId",
         "jobId": "ObjectId",
         "createdAt": "Date",
-        "updatedAt": "Date"
+        "updatedAt": "Date",
+        "__v": "Number"
     },
     ...
 ]
@@ -174,7 +176,8 @@ _Response (200 - OK)_
     "amount": "Number",
     "userId": "ObjectId",
     "createdAt": "Date",
-    "updatedAt": "Date"
+    "updatedAt": "Date",
+    "__v": "Number"
 }
 ```
 
@@ -232,19 +235,20 @@ Description:
 _Response (201 - Created)_
 ```json
 {
-    "_id": "ObjectId",
     "email": "String",
     "phoneNumber": "String",
     "role": "client",
     "createdAt": "Date",
-    "updatedAt": "Date"
+    "updatedAt": "Date",
+    "_id": "ObjectId",
+    "__v": "Number"
 }
 ```
 
 _Response(400 - Bad Request)_
 ```json
 {
-    "message": "`email` is required"
+    "message": "Path `email` is required"
 }
 OR
 {
@@ -252,19 +256,19 @@ OR
 }
 OR
 {
-    "message": "`phoneNumber` is required"
+    "message": "Email already exist!"
 }
 OR
 {
-    "message": "`password` is required"
+    "message": "Path `phoneNumber` is required"
+}
+OR
+{
+    "message": "Path `password` is required"
 }
 OR
 {
     "message": "Password must be at least 6 characters!"
-}
-OR
-{
-    "message": "`role` is required"
 }
 ```
 
@@ -337,22 +341,154 @@ _Response (200 - OK)_
     "userId": "ObjectId",
     "createdAt": "Date",
     "updatedAt": "Date",
-    "usersDate": {
+    "__v": 0,
+    "usersData": {
         "_id": "ObjectId",
         "phoneNumber": "String",
         "role": "client",
         "createdAt": "Date",
         "updatedAt": "Date",
+        "__v": 0
     }
 }
 ```
+
+&nbsp;
 
 ## 9. GET /clients/jobs/active
 
 Description:
 - Getting the jobs list that are currently active from current login user, it can be sorted by createdAt and filtered by category
 
+- Headers:
+```json
+{
+    "access_token": "String"
+}
+```
 
+_Response(200 - OK)_
+```json
+[
+    {
+        "_id": "ObjectId",
+        "description": "String",
+        "addess": "String",
+        "fee": "Number",
+        "images": ["String"],
+        "clientId": "OjectId",
+        "workerId": "ObjectId",
+        "categoryId": "ObjectId",
+        "chatId": "ObjectId",
+        "createdAt": "Date",
+        "updatedAt": "Date",
+        "__v": "Number",
+        "category": {
+            "_id": "ObjectId",
+            "name": "String",
+            "description": "String",
+            "createdAt": "Date",
+            "updatedAt": "Date",
+            "__v": "Number"
+        },
+        "status": {
+            "_id": "ObjectId",
+            "jobId": "ObjectId",
+            "isWorkerConfirmed": "Boolean",
+            "isClientConfirmed": "Boolean",
+            "isDone": "Boolean",
+            "createdAt": "Date",
+            "updatedAt": "Date",
+            "__v": "Number"
+        }
+    }
+]
+```
+
+&nbsp;
+
+## 10. POST /clients/jobs/bersih
+
+Description:
+- Creating a new "Bersih"(Cleaning) Job from current login user. The input will be fee, description, address, and array of image data.
+
+- Headers:
+```json
+{
+    "access_token": "String"
+}
+```
+
+- Body:
+```json
+{
+    "fee": "Number",
+    "description": "String",
+    "address": "String"
+}
+```
+
+- Files:
+```json
+{
+    "image": ["Image"]
+}
+```
+
+_Response (201 - Created)_
+```json
+{
+    "message": "Job is successfully created!"
+}
+```
+
+_Response (400 - Bad Request)_
+```json
+{
+    "message": "You don't have enough money"
+}
+OR
+{
+  "message": "Image not found"
+}
+```
+
+&nbsp;
+
+## 11. POST /clients/jobs/belanja
+
+Description:
+- Creating a new "Belanja"(Shopping) Job from current login user. The input will be fee, description, address.
+
+- Headers:
+```json
+{
+    "access_token": "String"
+}
+```
+
+- Body:
+```json
+{
+    "fee": "Number",
+    "description": "String",
+    "address": "String"
+}
+```
+
+_Response (201 - Created)_
+```json
+{
+    "message": "Job is successfully created!"
+}
+```
+
+_Response (400 - Bad Request)_
+```json
+{
+    "message": "You don't have enough money"
+}
+```
 
 &nbsp;
 
