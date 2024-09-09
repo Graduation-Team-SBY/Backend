@@ -7,19 +7,19 @@ import { TopUp } from '../models/topup';
 export class Controller {
   static async topup(req: AuthRequest, res: Response, next: NextFunction) {
     try {
+      const { amount } = req.body;
       let snap = new midtransClient.Snap({
         isProduction: false,
         serverKey: process.env.MIDTRANS_SERVER_KEY,
       });
       const topupId = `${new Date().getTime()}${req.user?._id}`;
-      const amount = 100000;
 
       const findUser = await User.findById(req.user?._id);
 
       let parameter = {
         transaction_details: {
           order_id: topupId,
-          gross_amount: amount,
+          gross_amount: Number(amount),
         },
         credit_card: {
           secure: true,
