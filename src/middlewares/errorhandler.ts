@@ -66,6 +66,14 @@ export const errorHandler = (
       status = 400;
       message = 'You don\'t have enough money!';
       break;
+    case 'CannotCancel':
+      status = 403;
+      message = 'You cannot cancel this job order!';
+      break;
+    case 'ImageNotFound':
+      status = 400;
+      message = 'Failed to upload image, please try again!';
+      break;
   }
   console.log(err);
   res.status(status).json({ message });
