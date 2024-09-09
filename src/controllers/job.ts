@@ -21,7 +21,7 @@ export class Controller {
       const newJob = new Job({
         description: description,
         address: address,
-        coordinates,
+        coordinates: JSON.parse(coordinates),
         addressNotes,
         fee: Number(fee),
         categoryId: new ObjectId("66d97dfec793c4c4de7c2db0"),
@@ -408,6 +408,13 @@ export class Controller {
         });
         await newJobStatus.save({ session });
       });
+      redis.keys("jobs*").then(async (keys) => {
+        let pipeline = await redis.pipeline();
+        keys.forEach((key) => {
+          pipeline.del(key);
+        });
+        return pipeline.exec();
+      });
       res.status(200).json({ message: "Successfully picked worker" });
     } catch (err) {
       next(err);
@@ -463,7 +470,7 @@ export class Controller {
       }
       await session.withTransaction(async () => {
         await findJobStatus?.updateOne({ isClientConfirmed: true, isDone: true }, { session });
-        const job = await Job.findById(objJobId, "_id clientId workerId");
+        const job = await Job.findById(objJobId, "_id clientId workerId fee");
         const newTransaction = new Transaction({
           clientId: job?.clientId,
           workerId: job?.workerId,
