@@ -7,6 +7,7 @@ import { startSession } from "mongoose";
 import { Profile } from "../models/profile";
 import { Wallet } from "../models/wallet";
 import { WorkerProfile } from "../models/workerprofile";
+import { transporter } from "../config/nodemailer";
 
 export default class Controller {
   static async clientRegister(req: Request, res: Response, next: NextFunction) {
@@ -33,11 +34,12 @@ export default class Controller {
         await newWallet.save({ session });
         res.status(201).json(newUser);
         const mailOpt = {
-          from: "aryawjati@gmail.com",
+          from: "muhfarros28@gmail.com",
           to: email,
-          subject: "Welcome to our App!",
-          text: "You have successfully registered to AssistMaster App",
+          subject: "Welcome to YangTu App!",
+          text: "You have successfully registered to YangTu App, you can use our Berbersih dan Nitip features!",
         };
+        await transporter.sendMail(mailOpt);
       });
     } catch (err) {
       next(err);
@@ -69,6 +71,13 @@ export default class Controller {
         });
         await newWallet.save({ session });
         res.status(201).json(newUser);
+        const mailOpt = {
+          from: "muhfarros28@gmail.com",
+          to: email,
+          subject: "Welcome to our YangTu App!",
+          text: "You have successfully registered to YangTu App, you can work now to gain money!",
+        };
+        await transporter.sendMail(mailOpt);
       });
     } catch (err) {
       next(err);

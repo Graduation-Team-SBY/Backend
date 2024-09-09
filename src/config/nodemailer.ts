@@ -1,10 +1,10 @@
 import nodemailer from "nodemailer";
+const user = process.env.NODEMAILER_USER;
+const pass = process.env.NODEMAILER_PASS;
 export const transporter = nodemailer.createTransport({
-  host: "live.smtp.mailtrap.io",
-  port: 587,
-  secure: false,
+  service: "gmail",
   auth: {
-    user: "1a2b3c4d5e6f7g",
-    pass: "1a2b3c4d5e6f7g",
+    user: user || "muhfarros28@gmail.com",
+    pass: pass || "xscregntbomfgvqe",
   },
 });
