@@ -16,18 +16,20 @@ export class Controller {
     const session = await startSession();
     try {
       await profileChecker(req.user?._id as ObjectId);
-      const { fee, description, address } = req.body;
+      const { fee, description, address, coordinates, addressNotes } = req.body;
       const newJob = new Job({
         description: description,
         address: address,
+        coordinates,
+        addressNotes,
         fee: Number(fee),
         categoryId: new ObjectId("66d97dfec793c4c4de7c2db0"),
         clientId: req.user?._id,
       });
       await session.withTransaction(async () => {
         const wallet = await Wallet.findOne({ userId: req.user?._id }, {}, { session });
-        if ((wallet?.amount as number) >= fee) {
-          await wallet?.updateOne({ $inc: { amount: -Number(fee) } }, { session });
+        if ((wallet?.amount as number) >= Number(fee) + 2000) {
+          await wallet?.updateOne({ $inc: { amount: -Number(fee) - 2000 } }, { session });
         } else {
           throw { name: "NotEnoughMoney" };
         }
@@ -536,7 +538,7 @@ export class Controller {
         throw { name: "CannotCancel" };
       }
       await session.withTransaction(async () => {
-        await Wallet.findOneAndUpdate({ userId: req.user?._id }, { $inc: { amount: job.fee } });
+        await Wallet.findOneAndUpdate({ userId: req.user?._id }, { $inc: { amount: job.fee + 2000 } });
         await job.deleteOne();
       });
       res.status(200).json({ message: "Job is successfully canceled!" });
