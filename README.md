@@ -96,7 +96,7 @@ Description:
 - Params:
 ```json
 {
-    "jobId": "ObjectId"
+    "jobId": "String"
 }
 ```
 
@@ -113,7 +113,27 @@ _Response (200 - OK)_
     "categoryId": "ObjectId",
     "chatId": "ObjectId",
     "createdAt": "Date",
-    "updatedAt": "Date"
+    "updatedAt": "Date",
+    "__v": "Number",
+    "category": {
+        "_id": "ObjectId",
+        "name": "String",
+        "description": "String",
+        "createdAt": "Date",
+        "updatedAt": "Date",
+        "__v": "Number"
+    },
+    "client": {
+        "_id": "ObjectId",
+        "name": "String",
+        "dateOfBirth": "Date",
+        "profilePicture": "String",
+        "address": "String",
+        "userId": "ObjectId",
+        "createdAt": "Date",
+        "updatedAt": "Date",
+        "__v": 0
+    }
 }
 ```
 
@@ -312,7 +332,7 @@ _Response (200 - OK)_
 _Response (400 - Bad Request)_
 ```json
 {
-  "message": "Image not found"
+  "message": "Failed to upload image, please try again!"
 }
 ```
 
@@ -321,7 +341,7 @@ _Response (400 - Bad Request)_
 ## 8. GET /clients/profile
 
 Description:
-- Getting  the profile information of current login user
+- Getting the profile information of current login user who has client role
 
 - Headers:
 ```json
@@ -367,6 +387,14 @@ Description:
 }
 ```
 
+- Query (Optional):
+```json
+{
+    "sort": "String (Default: asc)",
+    "category": "String"
+}
+```
+
 _Response(200 - OK)_
 ```json
 [
@@ -401,7 +429,8 @@ _Response(200 - OK)_
             "updatedAt": "Date",
             "__v": "Number"
         }
-    }
+    },
+    ...
 ]
 ```
 
@@ -445,11 +474,14 @@ _Response (201 - Created)_
 _Response (400 - Bad Request)_
 ```json
 {
+    "message": "Fill in your profile first!"
+}
+{
     "message": "You don't have enough money"
 }
 OR
 {
-  "message": "Image not found"
+    "message": "Failed to upload image, please try again!"
 }
 ```
 
@@ -486,7 +518,542 @@ _Response (201 - Created)_
 _Response (400 - Bad Request)_
 ```json
 {
+    "message": "Fill in your profile first!"
+}
+OR
+{
     "message": "You don't have enough money"
+}
+```
+
+&nbsp;
+
+## 12. GET /clients/jobs/:jobId/workers
+
+Description:
+- Get the job detail and worker list with detail based on jobId.
+
+- Headers:
+```json
+{
+    "access_token": "String"
+}
+```
+
+- Params:
+```json
+{
+    "jobId": "String"
+}
+```
+
+_Response(200 - OK)_
+```json
+{
+    "_id": "ObjectId",
+    "description": "String",
+    "addess": "String",
+    "fee": "Number",
+    "images": ["String"],
+    "clientId": "OjectId",
+    "workerId": "ObjectId",
+    "categoryId": "ObjectId",
+    "chatId": "ObjectId",
+    "createdAt": "Date",
+    "updatedAt": "Date",
+    "__v": "Number",
+    "workers": [
+        {
+            "_id": "ObjectId",
+            "userId": "ObjectId",
+            "name": "String",
+            "bio": "String",
+            "address": "String",
+            "dateOfBirth": "Date",
+            "profilePicture": "String",
+            "rating": "Number",
+            "createdAt": "Date",
+            "updatedAt": "Date",
+            "__v": 0
+        }
+    ]
+}
+```
+
+&nbsp;
+
+## 13. PATCH /clients/jobs/:jobId/client
+
+Description:
+- Updating isClientConfirmed boolean on specific job based jobId.
+
+- Headers:
+```json
+{
+    "access_token": "String"
+}
+```
+
+- Params:
+```json
+{
+    "jobId": "String"
+}
+```
+
+_Response (200 - OK)_
+```json
+{
+    "message": "Successfully update job order status"
+}
+```
+
+_Response (400 - Bad Request)_
+```json
+{
+    "message": "Worker haven't confirmed yet"
+}
+```
+
+&nbsp;
+
+## 14. PATCH /clients/jobs/:jobId/:workerId
+
+Description:
+- Updating workerId based on parameter and jobId. Then creating new job status based on jobId.
+
+- Headers:
+```json
+{
+    "access_token": "String"
+}
+```
+
+- Params:
+```json
+{
+    "jobId": "String",
+    "workerId": "String"
+}
+```
+
+_Response (200 - OK)_
+```json
+{
+    "message": "Successfully picked worker"
+}
+```
+
+_Response (400 - Bad Request)_
+```json
+{
+    "message": "You already picked a worker before"
+}
+```
+
+&nbsp;
+
+## 15. DELETE /clients/jobs/:jobId
+
+Description:
+- Cancelling the job order and delete the job from database and refund the user balance.
+
+- Headers:
+```json
+{
+    "access_token": "String"
+}
+```
+
+- Params:
+```json
+{
+    "jobId": "String"
+}
+```
+
+_Response (200 - OK)_
+```json
+{
+    "message": "Job is successfully canceled!"
+}
+```
+
+_Response (403 - Forbidden)_
+```json
+{
+    "message": "You cannot cancel this job order!"
+}
+```
+
+&nbsp;
+
+## 16. POST /workers/register
+
+Description: 
+- Register a new user and wallet as worker
+
+- Body:
+```json
+{
+    "email": "String",
+    "phoneNumber": "String",
+    "password": "String"
+}
+```
+
+_Response (201 - Created)_
+```json
+{
+    "email": "String",
+    "phoneNumber": "String",
+    "role": "worker",
+    "createdAt": "Date",
+    "updatedAt": "Date",
+    "_id": "ObjectId",
+    "__v": "Number"
+}
+```
+
+_Response(400 - Bad Request)_
+```json
+{
+    "message": "Path `email` is required"
+}
+OR
+{
+    "message": "Invalid email address"
+}
+OR
+{
+    "message": "Email already exist!"
+}
+OR
+{
+    "message": "Path `phoneNumber` is required"
+}
+OR
+{
+    "message": "Path `password` is required"
+}
+OR
+{
+    "message": "Password must be at least 6 characters!"
+}
+```
+
+&nbsp;
+
+## 17. GET /workers/profile
+
+Description:
+- Getting the profile information of current login user who has worker role
+
+- Headers:
+```json
+{
+    "access_token": "String"
+}
+```
+
+_Response (200 - OK)_
+```json
+{
+    "_id": "ObjectId",
+    "name": "String",
+    "dateOfBirth": "Date",
+    "profilePicture": "String",
+    "address": "String",
+    "userId": "ObjectId",
+    "createdAt": "Date",
+    "updatedAt": "Date",
+    "__v": 0,
+    "usersData": {
+        "_id": "ObjectId",
+        "phoneNumber": "String",
+        "role": "client",
+        "createdAt": "Date",
+        "updatedAt": "Date",
+        "__v": 0
+    }
+}
+```
+
+&nbsp;
+
+## 18. PATCH /workers/profile
+
+Description:
+- Updating Worker's profile information, including name, date of birth, address, and image profile
+
+- Headers:
+```json
+{
+    "access_token": "String"
+}
+```
+
+- Body:
+```json
+{
+    "name": "String",
+    "dateOfBirth": "String",
+    "address": "String"
+}
+```
+
+- File:
+```json
+{
+    "image": "Image"
+}
+```
+
+_Response (200 - OK)_
+```json
+{
+  "message": "Successfully updated profile"
+}
+```
+
+_Response (400 - Bad Request)_
+```json
+{
+  "message": "Failed to upload image, please try again!"
+}
+```
+
+&nbsp;
+
+## 19. GET /workers/profile/reviews
+
+Description:
+- Getting the list of reviews based on current login user who has worker role
+
+- Headers:
+```json
+{
+    "access_token": "String"
+}
+```
+
+_Response (200 - OK)_
+```json
+[
+    {
+        "_id": "ObjectId",
+        "description": "String",
+        "rating": "Number",
+        "images": ["Stirng"],
+        "createdAt": "Date",
+        "updatedAt": "Date",
+        "__v": 0,
+    },
+    ...
+]
+```
+
+&nbsp;
+
+## 20. GET /workers/jobs
+
+Description:
+- Getting the list of jobs that are currently worked by current login user with worker role
+
+- Headers:
+```json
+{
+    "access_token": "String"
+}
+```
+
+_Response(200 - OK)_
+```json
+[
+    {
+        "_id": "ObjectId",
+        "description": "String",
+        "addess": "String",
+        "fee": "Number",
+        "images": ["String"],
+        "clientId": "OjectId",
+        "workerId": "ObjectId",
+        "categoryId": "ObjectId",
+        "chatId": "ObjectId",
+        "createdAt": "Date",
+        "updatedAt": "Date",
+        "__v": "Number",
+        "status": {
+            "_id": "ObjectId",
+            "jobId": "ObjectId",
+            "isWorkerConfirmed": "Boolean",
+            "isClientConfirmed": "Boolean",
+            "isDone": "Boolean",
+            "createdAt": "Date",
+            "updatedAt": "Date",
+            "__v": "Number"
+        }
+    },
+    ...
+]
+```
+
+&nbsp;
+
+## 21. GET /workers/jobs/worker
+
+Description:
+- Getting the list of jobs that is open (No worker confirmed yet), it can be sorted by createdAt and filtered by category
+
+- Headers:
+```json
+{
+    "access_token": "String"
+}
+```
+
+- Query (Optional):
+```json
+{
+    "sort": "String (Default: asc)",
+    "category": "String"
+}
+```
+
+_Response (200 - OK)_
+```json
+[
+    {
+        "_id": "ObjectId",
+        "description": "String",
+        "addess": "String",
+        "fee": "Number",
+        "images": ["String"],
+        "clientId": "OjectId",
+        "workerId": "ObjectId",
+        "categoryId": "ObjectId",
+        "chatId": "ObjectId",
+        "createdAt": "Date",
+        "updatedAt": "Date",
+        "__v": "Number",
+        "category": {
+            "_id": "ObjectId",
+            "name": "String",
+            "description": "String",
+            "createdAt": "Date",
+            "updatedAt": "Date",
+            "__v": "Number"
+        },
+        "client": {
+            "_id": "ObjectId",
+            "name": "String",
+            "dateOfBirth": "Date",
+            "profilePicture": "String",
+            "address": "String",
+            "userId": "ObjectId",
+            "createdAt": "Date",
+            "updatedAt": "Date",
+            "__v": 0
+        }
+    },
+    ...
+]
+```
+
+&nbsp;
+
+## 22. PATCH /workers/:jobId/worker
+
+Description:
+- Updating Job Status to become true boolean true with uploading image
+
+- Headers:
+```json
+{
+    "access_token": "String"
+}
+```
+
+- Files:
+```json
+{
+    "image": ["Image"]
+}
+```
+
+_Response (200 - OK)_
+```json
+{
+    "message": "Successfully update job status"
+}
+```
+
+_Response (400 - Bad Request)_
+```json
+{
+  "message": "Failed to upload image, please try again!"
+}
+```
+
+&nbsp;
+
+## 23. POST /workers/:jobId
+
+Description:
+- Creating new job request based on jobId request for applying job as worker
+
+- Headers:
+```json
+{
+    "access_token": "String"
+}
+```
+
+- Params:
+```json
+{
+    "jobId": "String"
+}
+```
+
+_Response (201 - Created)_
+```json
+{
+    "jobId": "Object",
+    "workerId": "ObjectId",
+    "createdAt": "Date",
+    "updatedAt": "Date",
+    "_id": "ObjectId",
+    "__v": "Number",
+}
+```
+
+_Response (400 - Bad Request)_
+```json
+{
+    "message": "Fill in your profile first!"
+}
+```
+
+&nbsp;
+
+## 24. POST /payment/topup
+
+Description:
+- Creating new job request based on jobId request for applying job as worker
+
+- Headers:
+```json
+{
+    "access_token": "String"
+}
+```
+
+_Response (200 - OK)_
+```json
+{
+    "trans_token": "String",
+    "topUpId": "String"
 }
 ```
 
