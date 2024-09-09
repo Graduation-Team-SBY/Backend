@@ -19,8 +19,6 @@ export interface IProfile {
   dateOfBirth?: Date;
   profilePicture?: string;
   address?: string;
-  coordinates?: string;
-  addressNotes?: string;
   userId: ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
@@ -52,6 +50,11 @@ export interface IJob {
   _id: ObjectId;
   description: string;
   address: string;
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
+  addressNotes?: string;
   fee: number;
   images?: string[];
   clientId: ObjectId;

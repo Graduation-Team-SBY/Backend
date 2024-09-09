@@ -16,18 +16,20 @@ export class Controller {
     const session = await startSession();
     try {
       await profileChecker(req.user?._id as ObjectId);
-      const { fee, description, address } = req.body;
+      const { fee, description, address, coordinates, addressNotes } = req.body;
       const newJob = new Job({
         description: description,
         address: address,
+        coordinates,
+        addressNotes,
         fee: Number(fee),
         categoryId: new ObjectId("66d97dfec793c4c4de7c2db0"),
         clientId: req.user?._id,
       });
       await session.withTransaction(async () => {
         const wallet = await Wallet.findOne({ userId: req.user?._id }, {}, { session });
-        if ((wallet?.amount as number) >= fee) {
-          await wallet?.updateOne({ $inc: { amount: -Number(fee) } }, { session });
+        if ((wallet?.amount as number) >= Number(fee) + 2000) {
+          await wallet?.updateOne({ $inc: { amount: -Number(fee) - 2000 } }, { session });
         } else {
           throw { name: "NotEnoughMoney" };
         }
@@ -66,18 +68,20 @@ export class Controller {
     const session = await startSession();
     try {
       await profileChecker(req.user?._id as ObjectId);
-      const { fee, description, address } = req.body;
+      const { fee, description, address, coordinates, addressNotes } = req.body;
       const newJob = new Job({
         description: description,
         address: address,
+        coordinates,
+        addressNotes,
         fee: Number(fee),
         categoryId: new ObjectId("66d97e7518cd9c2062da3d98"),
         clientId: req.user?._id,
       });
       await session.withTransaction(async () => {
         const wallet = await Wallet.findOne({ userId: req.user?._id }, {}, { session });
-        if ((wallet?.amount as number) >= fee) {
-          await wallet?.updateOne({ $inc: { amount: -Number(fee) } }, { session });
+        if ((wallet?.amount as number) >= Number(fee) + 2000) {
+          await wallet?.updateOne({ $inc: { amount: -Number(fee) - 2000 } }, { session });
         } else {
           throw { name: "NotEnoughMoney" };
         }
@@ -199,7 +203,19 @@ export class Controller {
             path: "$category",
             preserveNullAndEmptyArrays: true,
           },
-        },
+        }, {
+          '$lookup': {
+            'from': 'profiles', 
+            'localField': 'clientId', 
+            'foreignField': 'userId', 
+            'as': 'client'
+          }
+        }, {
+          '$unwind': {
+            'path': '$client', 
+            'preserveNullAndEmptyArrays': true
+          }
+        }
       ];
 
       if (category) {
@@ -336,7 +352,19 @@ export class Controller {
               },
             ],
           },
-        },
+        }, {
+          '$lookup': {
+            'from': 'jobstatuses', 
+            'localField': '_id', 
+            'foreignField': 'jobId', 
+            'as': 'status'
+          }
+        }, {
+          '$unwind': {
+            'path': '$status', 
+            'preserveNullAndEmptyArrays': true
+          }
+        }
       ];
       const workers = await Job.aggregate(agg);
       res.status(200).json(workers[0]);
@@ -506,7 +534,31 @@ export class Controller {
           $match: {
             "status.isDone": false,
           },
-        },
+        }, {
+          '$lookup': {
+            'from': 'categories', 
+            'localField': 'categoryId', 
+            'foreignField': '_id', 
+            'as': 'category'
+          }
+        }, {
+          '$lookup': {
+            'from': 'profiles', 
+            'localField': 'clientId', 
+            'foreignField': 'userId', 
+            'as': 'client'
+          }
+        }, {
+          '$unwind': {
+            'path': '$client', 
+            'preserveNullAndEmptyArrays': true
+          }
+        }, {
+          '$unwind': {
+            'path': '$category', 
+            'preserveNullAndEmptyArrays': true
+          }
+        }
       ];
       const currentJob = await Job.aggregate(agg);
       res.status(200).json(currentJob);
@@ -524,7 +576,7 @@ export class Controller {
         throw { name: "CannotCancel" };
       }
       await session.withTransaction(async () => {
-        await Wallet.findOneAndUpdate({ userId: req.user?._id }, { $inc: { amount: job.fee } });
+        await Wallet.findOneAndUpdate({ userId: req.user?._id }, { $inc: { amount: job.fee + 2000 } });
         await job.deleteOne();
       });
       res.status(200).json({ message: "Job is successfully canceled!" });
