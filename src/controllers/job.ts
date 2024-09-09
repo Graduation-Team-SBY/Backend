@@ -9,6 +9,7 @@ import { JobStatus } from "../models/jobstatus";
 import { Transaction } from "../models/transaction";
 import { profileChecker, profileWorkerChecker } from "../helpers/profilechecker";
 import { Wallet } from "../models/wallet";
+import { redis } from "../config/redis";
 
 export class Controller {
   static async createJobBersih(req: AuthRequest, res: Response, next: NextFunction) {
@@ -51,6 +52,10 @@ export class Controller {
       next(err);
     } finally {
       await session.endSession();
+      await redis.del("jobs:all");
+      await redis.del("jobs-testing:all");
+      await redis.del("jobs-testing-asc:all");
+      await redis.del("jobs-testing-desc:all");
     }
   }
 
@@ -80,6 +85,10 @@ export class Controller {
       next(err);
     } finally {
       await session.endSession();
+      await redis.del("jobs:all");
+      await redis.del("jobs-testing2:all");
+      await redis.del("jobs-testing2-asc:all");
+      await redis.del("jobs-testing2-desc:all");
     }
   }
 
@@ -158,42 +167,54 @@ export class Controller {
     try {
       const { category, sort } = req.query;
       let sortOrder = -1;
-      if (sort === 'asc') {
+      if (sort === "asc") {
         sortOrder = 1;
       }
-      if (sort === 'desc') {
+      if (sort === "desc") {
         sortOrder = -1;
       }
-      const agg : any = [
+      const agg: any = [
         {
-          '$match': {
-            'workerId': null
-          }
-        }, {
-          '$lookup': {
-            'from': 'categories', 
-            'localField': 'categoryId', 
-            'foreignField': '_id', 
-            'as': 'category'
-          }
-        }, {
-          '$unwind': {
-            'path': '$category', 
-            'preserveNullAndEmptyArrays': true
-          }
-        }
+          $match: {
+            workerId: null,
+          },
+        },
+        {
+          $lookup: {
+            from: "categories",
+            localField: "categoryId",
+            foreignField: "_id",
+            as: "category",
+          },
+        },
+        {
+          $unwind: {
+            path: "$category",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
       ];
 
       if (category) {
         agg.push({
-          '$match': {
-            'category.name': category
-          }
-        })
+          $match: {
+            "category.name": category,
+          },
+        });
       }
-
-      const jobs = await Job.aggregate(agg).sort({ createdAt: sortOrder as SortOrder })
-      res.status(200).json(jobs);
+      let cacheName = `jobs${category ? `-${category}` : ""}${sort ? `-${sort}` : ""}:all`;
+      console.log(cacheName);
+      const allJobsCache = await JSON.parse((await redis.get(cacheName)) as string);
+      if (allJobsCache) {
+        console.log("job cache ada");
+        res.status(200).json(allJobsCache);
+        const jobs = await Job.aggregate(agg).sort({ createdAt: sortOrder as SortOrder });
+        await redis.set(`jobs-${sort}-${category}:all`, JSON.stringify(jobs));
+      } else {
+        const jobs = await Job.aggregate(agg).sort({ createdAt: sortOrder as SortOrder });
+        res.status(200).json(jobs);
+        await redis.set(cacheName, JSON.stringify(jobs));
+      }
     } catch (err) {
       next(err);
     }
@@ -204,38 +225,42 @@ export class Controller {
       const { jobId } = req.params;
       const agg = [
         {
-          '$match': {
-            '_id': new ObjectId(jobId)
-          }
-        }, {
-          '$lookup': {
-            'from': 'categories', 
-            'localField': 'categoryId', 
-            'foreignField': '_id', 
-            'as': 'category'
-          }
-        }, {
-          '$unwind': {
-            'path': '$category', 
-            'preserveNullAndEmptyArrays': true
-          }
-        }, {
-          '$lookup': {
-            'from': 'profiles', 
-            'localField': 'clientId', 
-            'foreignField': 'userId', 
-            'as': 'client'
-          }
-        }, {
-          '$unwind': {
-            'path': '$client', 
-            'preserveNullAndEmptyArrays': true
-          }
-        }
+          $match: {
+            _id: new ObjectId(jobId),
+          },
+        },
+        {
+          $lookup: {
+            from: "categories",
+            localField: "categoryId",
+            foreignField: "_id",
+            as: "category",
+          },
+        },
+        {
+          $unwind: {
+            path: "$category",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $lookup: {
+            from: "profiles",
+            localField: "clientId",
+            foreignField: "userId",
+            as: "client",
+          },
+        },
+        {
+          $unwind: {
+            path: "$client",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
       ];
       const job = await Job.aggregate(agg);
       if (!job.length) {
-        throw {name: 'NotFound'}
+        throw { name: "NotFound" };
       }
       res.status(200).json(job[0]);
     } catch (err) {
@@ -489,13 +514,13 @@ export class Controller {
       const { jobId } = req.params;
       const job = await Job.findById(new ObjectId(jobId));
       if (job?.workerId !== null) {
-        throw {name: 'CannotCancel'};
+        throw { name: "CannotCancel" };
       }
       await session.withTransaction(async () => {
         await Wallet.findOneAndUpdate({ userId: req.user?._id }, { $inc: { amount: job.fee } });
         await job.deleteOne();
       });
-      res.status(200).json({message: 'Job is successfully canceled!'});
+      res.status(200).json({ message: "Job is successfully canceled!" });
     } catch (err) {
       next(err);
     } finally {

@@ -17,21 +17,27 @@ export default class Controller {
         email,
         phoneNumber,
         password,
-        role: 'client'
+        role: "client",
       });
-      await session.withTransaction(async() => {
+      await session.withTransaction(async () => {
         await newUser.validate();
         newUser.password = hashPassword(password);
         await newUser.save({ session });
         const newProfile = new Profile({
-          userId: newUser._id
+          userId: newUser._id,
         });
         await newProfile.save();
         const newWallet = new Wallet({
-          userId: newUser._id
+          userId: newUser._id,
         });
         await newWallet.save({ session });
         res.status(201).json(newUser);
+        const mailOpt = {
+          from: "aryawjati@gmail.com",
+          to: email,
+          subject: "Welcome to our App!",
+          text: "You have successfully registered to AssistMaster App",
+        };
       });
     } catch (err) {
       next(err);
@@ -48,18 +54,18 @@ export default class Controller {
         email,
         phoneNumber,
         password,
-        role: 'worker'
+        role: "worker",
       });
-      await session.withTransaction(async() => {
+      await session.withTransaction(async () => {
         await newUser.validate();
         newUser.password = hashPassword(password);
         await newUser.save({ session });
         const newWorkerProfile = new WorkerProfile({
-          userId: newUser._id
+          userId: newUser._id,
         });
         await newWorkerProfile.save();
         const newWallet = new Wallet({
-          userId: newUser._id
+          userId: newUser._id,
         });
         await newWallet.save({ session });
         res.status(201).json(newUser);
