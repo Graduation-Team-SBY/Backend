@@ -227,6 +227,9 @@ export class Controller {
         }
       ];
       const job = await Job.aggregate(agg);
+      if (!job.length) {
+        throw {name: 'NotFound'}
+      }
       res.status(200).json(job[0]);
     } catch (err) {
       next(err);
