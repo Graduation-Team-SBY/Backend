@@ -94,7 +94,6 @@ export class Controller {
     } finally {
       await session.endSession();
       redis.keys("jobs*").then(async (keys) => {
-        console.log("test masuk ngga");
         let pipeline = await redis.pipeline();
         keys.forEach((key) => {
           pipeline.del(key);
@@ -165,7 +164,6 @@ export class Controller {
           },
         });
       }
-
       const jobs = await Job.aggregate(agg)
         .unwind("category")
         .sort({ createdAt: sortOrder as SortOrder });
@@ -229,10 +227,8 @@ export class Controller {
         });
       }
       let cacheName = `jobs${category ? `-${category}` : ""}${sort ? `-${sort}` : ""}:all`;
-      console.log(cacheName);
       const allJobsCache = await JSON.parse((await redis.get(cacheName)) as string);
       if (allJobsCache) {
-        console.log("job cache ada");
         res.status(200).json(allJobsCache);
         const jobs = await Job.aggregate(agg).sort({
           createdAt: sortOrder as SortOrder,
