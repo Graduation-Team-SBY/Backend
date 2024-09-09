@@ -194,7 +194,19 @@ export class Controller {
             path: "$category",
             preserveNullAndEmptyArrays: true,
           },
-        },
+        }, {
+          '$lookup': {
+            'from': 'profiles', 
+            'localField': 'clientId', 
+            'foreignField': 'userId', 
+            'as': 'client'
+          }
+        }, {
+          '$unwind': {
+            'path': '$client', 
+            'preserveNullAndEmptyArrays': true
+          }
+        }
       ];
 
       if (category) {
@@ -519,6 +531,23 @@ export class Controller {
             'localField': 'categoryId', 
             'foreignField': '_id', 
             'as': 'category'
+          }
+        }, {
+          '$lookup': {
+            'from': 'profiles', 
+            'localField': 'clientId', 
+            'foreignField': 'userId', 
+            'as': 'client'
+          }
+        }, {
+          '$unwind': {
+            'path': '$client', 
+            'preserveNullAndEmptyArrays': true
+          }
+        }, {
+          '$unwind': {
+            'path': '$category', 
+            'preserveNullAndEmptyArrays': true
           }
         }
       ];
