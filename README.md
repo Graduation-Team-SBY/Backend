@@ -284,6 +284,10 @@ OR
 }
 OR
 {
+    "message": "PhoneNumber already exist!"
+}
+OR
+{
     "message": "Path `password` is required"
 }
 OR
@@ -731,6 +735,10 @@ OR
 OR
 {
     "message": "Path `phoneNumber` is required"
+}
+OR
+{
+    "message": "PhoneNumber already exist!"
 }
 OR
 {
