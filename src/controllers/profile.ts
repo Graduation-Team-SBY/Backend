@@ -50,16 +50,17 @@ export class Controller {
         throw { name: "NotFound" };
       }
       await session.withTransaction(async () => {
-        if (!req.file) {
-          throw { name: "ImageNotFound" };
+        // if (!req.file) {
+        //   throw { name: "ImageNotFound" };
+        // }
+        if (req.file) {
+          updateProfile.profilePicture = await uploadProfileImage(req.file as Express.Multer.File, req.user?._id);
         }
-        const profilePictureUrl = await uploadProfileImage(req.file as Express.Multer.File, req.user?._id);
-        if (!profilePictureUrl) {
-          throw { name: "ImageNotFound" };
-        }
+        // if (!profilePictureUrl) {
+        //   throw { name: "ImageNotFound" };
+        // }
         updateProfile.name = name;
         updateProfile.dateOfBirth = new Date(dateOfBirth);
-        updateProfile.profilePicture = profilePictureUrl;
         updateProfile.address = address;
         await updateProfile.save({ session });
       });

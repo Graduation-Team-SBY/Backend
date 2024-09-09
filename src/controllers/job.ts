@@ -52,10 +52,13 @@ export class Controller {
       next(err);
     } finally {
       await session.endSession();
-      await redis.del("jobs:all");
-      await redis.del("jobs-testing:all");
-      await redis.del("jobs-testing-asc:all");
-      await redis.del("jobs-testing-desc:all");
+      redis.keys("jobs*").then(async (keys) => {
+        let pipeline = await redis.pipeline();
+        keys.forEach((key) => {
+          pipeline.del(key);
+        });
+        return pipeline.exec();
+      });
     }
   }
 
@@ -85,10 +88,14 @@ export class Controller {
       next(err);
     } finally {
       await session.endSession();
-      await redis.del("jobs:all");
-      await redis.del("jobs-testing2:all");
-      await redis.del("jobs-testing2-asc:all");
-      await redis.del("jobs-testing2-desc:all");
+      redis.keys("jobs*").then(async (keys) => {
+        console.log("test masuk ngga");
+        let pipeline = await redis.pipeline();
+        keys.forEach((key) => {
+          pipeline.del(key);
+        });
+        return pipeline.exec();
+      });
     }
   }
 
