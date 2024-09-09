@@ -329,7 +329,19 @@ export class Controller {
               },
             ],
           },
-        },
+        }, {
+          '$lookup': {
+            'from': 'jobstatuses', 
+            'localField': '_id', 
+            'foreignField': 'jobId', 
+            'as': 'status'
+          }
+        }, {
+          '$unwind': {
+            'path': '$status', 
+            'preserveNullAndEmptyArrays': true
+          }
+        }
       ];
       const workers = await Job.aggregate(agg);
       res.status(200).json(workers[0]);
@@ -499,7 +511,14 @@ export class Controller {
           $match: {
             "status.isDone": false,
           },
-        },
+        }, {
+          '$lookup': {
+            'from': 'categories', 
+            'localField': 'categoryId', 
+            'foreignField': '_id', 
+            'as': 'category'
+          }
+        }
       ];
       const currentJob = await Job.aggregate(agg);
       res.status(200).json(currentJob);

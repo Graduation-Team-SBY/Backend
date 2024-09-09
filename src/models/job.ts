@@ -4,6 +4,8 @@ import { IJobSchema } from "../types";
 const jobSchema = new Schema<IJobSchema>({
   description: { type: String, required: true },
   address: { type: String, required: true },
+  coordinates: { type: Object, default: null },
+  addressNotes: { type: String, default: null },
   fee: { type: Number, required: true },
   images: { type: Array, default: null },
   clientId: { type: Schema.Types.ObjectId, required: true },
