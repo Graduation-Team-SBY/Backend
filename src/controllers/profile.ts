@@ -110,7 +110,7 @@ export class Controller {
   static async getOrderHistories(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
     try {
       const { user } = req;
-      const { sort = "asc", filter = "week" } = req.query;
+      const { sort = "asc", filter = "month" } = req.query;
       let dateFilter = {};
       if (filter) {
         const { startDate, endDate } = getDateRange(filter as "week" | "month" | "year");
@@ -120,13 +120,10 @@ export class Controller {
             $lte: endDate,
           },
         };
-        console.log(dateFilter);
       }
-      // data client
-      //  data category
       const orderHistories = await Transaction.aggregate([
         {
-          $match: { clientId: user?._id },
+          $match: { clientId: user?._id, ...dateFilter },
         },
         {
           $lookup: {
