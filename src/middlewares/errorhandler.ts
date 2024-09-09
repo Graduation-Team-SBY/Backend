@@ -66,6 +66,10 @@ export const errorHandler = (
       status = 400;
       message = 'You don\'t have enough money!';
       break;
+    case 'CannotCancel':
+      status = 403;
+      message = 'You cannot cancel this job order!';
+      break;
   }
   console.log(err);
   res.status(status).json({ message });

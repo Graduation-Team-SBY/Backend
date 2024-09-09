@@ -149,12 +149,43 @@ export class Controller {
 
   static async allJobsWorker(req: Request, res: Response, next: NextFunction) {
     try {
-      const { categoryId } = req.query;
-      const query: { categoryId?: ObjectId; workerId: null } = { workerId: null };
-      if (categoryId) {
-        query.categoryId = new ObjectId(categoryId as string);
+      const { category, sort } = req.query;
+      let sortOrder = -1;
+      if (sort === 'asc') {
+        sortOrder = 1;
       }
-      const jobs = await Job.find(query).sort({ createdAt: -1 });
+      if (sort === 'desc') {
+        sortOrder = -1;
+      }
+      const agg : any = [
+        {
+          '$match': {
+            'workerId': null
+          }
+        }, {
+          '$lookup': {
+            'from': 'categories', 
+            'localField': 'categoryId', 
+            'foreignField': '_id', 
+            'as': 'category'
+          }
+        }, {
+          '$unwind': {
+            'path': '$category', 
+            'preserveNullAndEmptyArrays': true
+          }
+        }
+      ];
+
+      if (category) {
+        agg.push({
+          '$match': {
+            'category.name': category
+          }
+        })
+      }
+
+      const jobs = await Job.aggregate(agg).sort({ createdAt: sortOrder as SortOrder })
       res.status(200).json(jobs);
     } catch (err) {
       next(err);
@@ -164,8 +195,39 @@ export class Controller {
   static async jobDetail(req: Request, res: Response, next: NextFunction) {
     try {
       const { jobId } = req.params;
-      const job = await Job.findById(new ObjectId(jobId));
-      res.status(200).json(job);
+      const agg = [
+        {
+          '$match': {
+            '_id': new ObjectId(jobId)
+          }
+        }, {
+          '$lookup': {
+            'from': 'categories', 
+            'localField': 'categoryId', 
+            'foreignField': '_id', 
+            'as': 'category'
+          }
+        }, {
+          '$unwind': {
+            'path': '$category', 
+            'preserveNullAndEmptyArrays': true
+          }
+        }, {
+          '$lookup': {
+            'from': 'profiles', 
+            'localField': 'clientId', 
+            'foreignField': 'userId', 
+            'as': 'client'
+          }
+        }, {
+          '$unwind': {
+            'path': '$client', 
+            'preserveNullAndEmptyArrays': true
+          }
+        }
+      ];
+      const job = await Job.aggregate(agg);
+      res.status(200).json(job[0]);
     } catch (err) {
       next(err);
     }
@@ -404,6 +466,26 @@ export class Controller {
       res.status(200).json(currentJob);
     } catch (err) {
       next(err);
+    }
+  }
+
+  static async cancelJob(req: AuthRequest, res: Response, next: NextFunction) {
+    const session = await startSession();
+    try {
+      const { jobId } = req.params;
+      const job = await Job.findById(new ObjectId(jobId));
+      if (job?.workerId !== null) {
+        throw {name: 'CannotCancel'};
+      }
+      await session.withTransaction(async () => {
+        await Wallet.findOneAndUpdate({ userId: req.user?._id }, { $inc: { amount: job.fee } });
+        await job.deleteOne();
+      });
+      res.status(200).json({message: 'Job is successfully canceled!'});
+    } catch (err) {
+      next(err);
+    } finally {
+      await session.endSession();
     }
   }
 
