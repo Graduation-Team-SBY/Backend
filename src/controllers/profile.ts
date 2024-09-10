@@ -215,7 +215,6 @@ export class Controller {
     const session = await startSession();
     try {
       const { topupId } = req.body;
-      
       const topup = await TopUp.findOne({ topupId: topupId });
       if (!topup) {
         throw { name: "NotFound" };
