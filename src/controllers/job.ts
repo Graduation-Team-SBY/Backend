@@ -593,7 +593,7 @@ export class Controller {
           },
         },
       ];
-      const currentJob = await Job.aggregate(agg);
+      const currentJob = await Job.aggregate(agg).sort({ createdAt: -1 });
       res.status(200).json(currentJob);
     } catch (err) {
       next(err);
