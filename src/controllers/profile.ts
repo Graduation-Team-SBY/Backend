@@ -171,7 +171,7 @@ export class Controller {
           },
         },
       ]);
-      if (!orderHistories) {
+      if (!orderHistories[0]) {
         throw { name: "NotFound" };
       }
 

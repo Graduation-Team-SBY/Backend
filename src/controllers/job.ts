@@ -21,7 +21,7 @@ export class Controller {
       const newJob = new Job({
         description: description,
         address: address,
-        coordinates: JSON.parse(coordinates),
+        coordinates,
         addressNotes,
         fee: Number(fee),
         categoryId: new ObjectId("66d97dfec793c4c4de7c2db0"),
@@ -233,13 +233,13 @@ export class Controller {
         const jobs = await Job.aggregate(agg).sort({
           createdAt: sortOrder as SortOrder,
         });
-        await redis.set(`jobs-${sort}-${category}:all`, JSON.stringify(jobs));
+        // await redis.set(`jobs-${sort}-${category}:all`, JSON.stringify(jobs));
       } else {
         const jobs = await Job.aggregate(agg).sort({
           createdAt: sortOrder as SortOrder,
         });
         res.status(200).json(jobs);
-        await redis.set(cacheName, JSON.stringify(jobs));
+        // await redis.set(cacheName, JSON.stringify(jobs));
       }
     } catch (err) {
       next(err);

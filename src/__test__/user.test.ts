@@ -3,7 +3,6 @@ import mongoose from "mongoose";
 import { app } from "../app";
 
 const MONGO_URI : any = process.env.MONGO_URI;
-let token;
 
 beforeAll(async () => {
     try {
@@ -233,6 +232,71 @@ describe(`POST /workers/register`, () => {
 
             expect(response.body).toBeInstanceOf(Object);
             expect(response.body).toHaveProperty(`message`, `Password must be at least 6 characters!`);
+        })
+    })
+})
+
+describe(`POST /login`, () => {
+    describe(`Success`, () => {
+        test(`Success OK and Create Access Token 200`, async () => {
+            const response = await request(app)
+                .post(`/login`)
+                .send({ 
+                    email: `nau@email.com`,
+                    password: `cheetah123`
+                })
+
+            expect(response.body).toBeInstanceOf(Object);
+            expect(response.body).toHaveProperty(`access_token`, expect.any(String));
+        })
+    })
+
+    describe(`Failed`, () => {
+        test(`Failed 400, No Email Input`, async () => {
+            const response = await request(app)
+                .post(`/login`)
+                .send({ 
+                    password: `cheetah123`
+                })
+            
+
+            expect(response.body).toBeInstanceOf(Object);
+            expect(response.body).toHaveProperty(`message`, "Please input your email!");
+        })
+
+        test(`Failed 400, No Password Input`, async () => {
+            const response = await request(app)
+                .post(`/login`)
+                .send({ 
+                    email: `nau@email.com`,
+                });
+
+            expect(response.body).toBeInstanceOf(Object);
+            expect(response.body).toHaveProperty(`message`, "Please input your password!");
+        })
+
+        test(`Failed 400, Invalid Email Input`, async () => {
+            const response = await request(app)
+                .post(`/login`)
+                .send({ 
+                    email: `cat@email.com`,
+                    password: `cheetah123`
+                });
+
+            expect(response.body).toBeInstanceOf(Object);
+            expect(response.body).toHaveProperty(`message`, "Invalid email/password");
+        })
+
+        test(`Failed 400, Invalid Password Input`, async () => {
+            const response = await request(app)
+                .post(`/login`)
+                .send({ 
+                    email: `nau@email.com`,
+                    password: `tiger123`,
+                });
+
+            expect(response.body).toBeInstanceOf(Object);
+            expect(response.body).toHaveProperty(`message`, "Invalid email/password");
         })
     })
 })
