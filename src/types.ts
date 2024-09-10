@@ -97,8 +97,7 @@ export interface IWorkerProfile {
   dateOfBirth?: Date;
   profilePicture?: string;
   address?: string;
-  coordinates?: string;
-  addressNotes?: string;
+  jobDone?: number;
   rating?: number;
   createdAt?: Date;
   updatedAt?: Date;
