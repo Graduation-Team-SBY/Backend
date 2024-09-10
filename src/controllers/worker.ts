@@ -38,51 +38,70 @@ export class Controller {
   }
   static async getWorkerReviews(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { user } = req;
-      const foundWorker = await WorkerProfile.findOne({ userId: user?._id });
-      if (!foundWorker) {
-        throw { name: "NotFound" };
-      }
-      const reviews = await Review.aggregate([
+      const agg = [
         {
-          $lookup: {
-            from: "transactions",
-            localField: "transactionId",
-            foreignField: "_id",
-            as: "transaction",
-          },
-        },
-        {
-          $unwind: "$transaction",
-        },
-        {
-          $match: {
-            "transaction.workerId": foundWorker._id,
-          },
-        },
-        {
-          $lookup: {
-            from: "workers",
-            localField: "transaction.workerId",
-            foreignField: "_id",
-            as: "worker",
-          },
-        },
-        {
-          $unwind: "$worker",
-        },
-        {
-          $project: {
-            _id: 1,
-            description: 1,
-            rating: 1,
-            images: 1,
-            "worker.bio": 1,
-            "worker.joinDate": 1,
-            "worker.rating": 1,
-          },
-        },
-      ]);
+          '$lookup': {
+            'from': 'jobs', 
+            'localField': 'jobId', 
+            'foreignField': '_id', 
+            'as': 'job'
+          }
+        }, {
+          '$unwind': {
+            'path': '$job', 
+            'preserveNullAndEmptyArrays': true
+          }
+        }, {
+          '$lookup': {
+            'from': 'profiles', 
+            'localField': 'job.clientId', 
+            'foreignField': 'userId', 
+            'as': 'client'
+          }
+        }, {
+          '$unwind': {
+            'path': '$client', 
+            'preserveNullAndEmptyArrays': true
+          }
+        }, {
+          '$lookup': {
+            'from': 'categories', 
+            'localField': 'job.categoryId', 
+            'foreignField': '_id', 
+            'as': 'category'
+          }
+        }, {
+          '$unwind': {
+            'path': '$category', 
+            'preserveNullAndEmptyArrays': true
+          }
+        }, {
+          '$project': {
+            'job': {
+              'description': 0, 
+              'address': 0, 
+              'fee': 0, 
+              'images': 0, 
+              'chatId': 0, 
+              'coordinates': 0, 
+              'addressNotes': 0
+            }, 
+            'client': {
+              'dateOfBirth': 0, 
+              'address': 0
+            }
+          }
+        }, {
+          '$match': {
+            'job.workerId': req.user?._id
+          }
+        }, {
+          '$project': {
+            'job': 0
+          }
+        }
+      ];
+      const reviews = await Review.aggregate(agg).sort({ createdAt: -1 });
       res.status(200).json(reviews);
     } catch (err) {
       console.log(err);
