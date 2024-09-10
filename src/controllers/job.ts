@@ -11,6 +11,7 @@ import { profileChecker, profileWorkerChecker } from "../helpers/profilechecker"
 import { Wallet } from "../models/wallet";
 import { redis } from "../config/redis";
 import { Review } from "../models/review";
+import { WorkerProfile } from "../models/workerprofile";
 
 export class Controller {
   static async createJobBersih(req: AuthRequest, res: Response, next: NextFunction) {
@@ -622,16 +623,20 @@ export class Controller {
   static async createReview(req: AuthRequest, res: Response, next: NextFunction) {
     const session = await startSession();
     try {
+      const { user } = req;
+      const { jobId } = req.params;
+      const { description, rating } = req.body;
+      if (!rating) {
+        throw { name: "RatingNotNull" };
+      }
+      const job = await Job.findById(new ObjectId(jobId));
+      const worker = await WorkerProfile.findOne({ userId: job?.workerId });
       await session.withTransaction(async () => {
-        const { user } = req;
-        const { jobId } = req.params;
-        const { description, rating } = req.body;
-        if (!rating) {
-          throw { name: "RatingNotNull" };
-        }
+        const ratingNow = (((worker?.rating as number) * (worker?.jobDone as number)) + rating) / (worker?.jobDone as number + 1);
+        worker?.updateOne({ rating: ratingNow, $inc: { jobDone: 1 } }, { session });
         const reviewImageUrls = await uploadImageFiles(req.files as Express.Multer.File[], user?._id, new ObjectId(jobId));
         const newReview = new Review({ jobId, description, rating, images: reviewImageUrls });
-        await newReview.save();
+        await newReview.save({ session });
         res.status(201).json({ message: "Successfully created review" });
       });
     } catch (err) {
