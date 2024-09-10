@@ -48,6 +48,7 @@ export type ICategorySchema = Omit<ICategory, "_id">;
 
 export interface IJob {
   _id: ObjectId;
+  title: string;
   description: string;
   address: string;
   coordinates?: {
