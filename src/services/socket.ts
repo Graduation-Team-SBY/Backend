@@ -21,8 +21,8 @@ export const socketFunc = (io: any) => {
 
         socket.join(jobId);
 
-        const [clientProfile, workerProfile] = await Promise.all([Profile.findOne({ userId: currJob.clientId }), WorkerProfile.findOne({ userId: currJob.workerId })]);
-        socket.emit("joined_room", { currJob, clientProfile, workerProfile });
+        const [clientProfile, workerProfile, chats] = await Promise.all([Profile.findOne({ userId: currJob.clientId }), WorkerProfile.findOne({ userId: currJob.workerId }), Chat.findById(chatId)]);
+        socket.emit("joined_room", { currJob, clientProfile, workerProfile, chats });
       } catch (err) {
         console.log("Error in join_room", err);
         socket.emit("error_handler", err || "ServerError");
