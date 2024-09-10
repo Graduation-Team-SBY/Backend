@@ -11,6 +11,6 @@
     "skipLibCheck": true,
     "resolveJsonModule": true
   },
-  "include": ["src", ".d.ts"],
+  "include": ["src", "declarations.d.ts"],
   "exclude": ["node_modules"]
 }

@@ -79,7 +79,7 @@ export type IJobRequestSchema = Omit<IJobRequest, "_id">;
 
 export interface IReview {
   _id: ObjectId;
-  transactionId: ObjectId;
+  jobId: ObjectId;
   description?: string;
   rating: number;
   images: string[];

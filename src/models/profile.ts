@@ -6,8 +6,6 @@ const profileSchema = new Schema<IProfileSchema>({
   dateOfBirth: { type: Date, default: null },
   profilePicture: { type: String, default: null },
   address: { type: String, default: null },
-  coordinates: { type: String, default: null },
-  addressNotes: { type: String, default: null },
   userId: { type: Schema.Types.ObjectId, required: true },
   createdAt: { type: Date, default: new Date() },
   updatedAt: { type: Date, default: new Date() },

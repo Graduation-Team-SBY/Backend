@@ -62,6 +62,7 @@ export class Controller {
         updateProfile.name = name;
         updateProfile.dateOfBirth = new Date(dateOfBirth);
         updateProfile.address = address;
+        updateProfile.updatedAt = new Date();
         await updateProfile.save({ session });
       });
 
@@ -83,18 +84,15 @@ export class Controller {
         throw { name: "NotFound" };
       }
       await session.withTransaction(async () => {
-        if (!req.file) {
-          throw { name: "ImageNotFound" };
-        }
-        const profilePictureUrl = await uploadProfileImage(req.file as Express.Multer.File, req.user?._id);
-        if (!profilePictureUrl) {
-          throw { name: "ImageNotFound" };
+        if (req.file) {
+          const profilePictureUrl = await uploadProfileImage(req.file as Express.Multer.File, req.user?._id);
+          updateProfile.profilePicture = profilePictureUrl;
         }
         updateProfile.name = name;
         updateProfile.dateOfBirth = new Date(dateOfBirth);
-        updateProfile.profilePicture = profilePictureUrl;
         updateProfile.address = address;
         updateProfile.bio = bio;
+        updateProfile.updatedAt = new Date();
         await updateProfile.save({ session });
       });
 

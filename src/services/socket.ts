@@ -35,8 +35,7 @@ export const socketFunc = (io: any) => {
         if (!chat) {
           throw "ChatNotFound";
         }
-        // ! Uncomment on prod
-        // data.senderId = senderId;
+        data.senderId = senderId;
         chat.contents.push(data);
         await chat.save();
         io.to(data.room).emit("receive_message", data);
