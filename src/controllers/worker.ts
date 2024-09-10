@@ -108,4 +108,32 @@ export class Controller {
       next(err);
     }
   }
+
+  static async getBestYasa(req: Request, res: Response, next: NextFunction) {
+    try {
+      const agg = [
+        {
+          '$project': {
+            'address': 0, 
+            'dateOfBirth': 0
+          }
+        }, {
+          '$limit': 5
+        }
+      ];
+
+      const data = await WorkerProfile.aggregate(agg).sort({ rating: -1 });
+      res.status(200).json(data);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // static async template(req: Request, res: Response, next: NextFunction) {
+  //   try {
+
+  //   } catch (err) {
+  //     next(err);
+  //   }
+  // }
 }

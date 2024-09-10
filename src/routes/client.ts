@@ -3,6 +3,7 @@ import { authentication } from "../middlewares/authentication";
 import { Controller as JobController } from "../controllers/job";
 import multer from "multer";
 import { Controller as ProfileController } from "../controllers/profile";
+import { Controller as WorkerController } from "../controllers/worker";
 import { authorization } from "../middlewares/authorization";
 import Controller from "../controllers";
 
@@ -10,6 +11,7 @@ export const router = Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
+router.get('/best-yasa', authentication, WorkerController.getBestYasa)
 router.post("/register", Controller.clientRegister);
 router.patch("/profile", authentication, upload.single("image"), ProfileController.updateProfileClient);
 router.get("/profile", authentication, ProfileController.getProfile);
