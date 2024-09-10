@@ -18,8 +18,9 @@ export class Controller {
     const session = await startSession();
     try {
       await profileChecker(req.user?._id as ObjectId);
-      const { fee, description, address, coordinates, addressNotes } = req.body;
+      const { title, fee, description, address, coordinates, addressNotes } = req.body;
       const newJob = new Job({
+        title: title,
         description: description,
         address: address,
         coordinates: JSON.parse(coordinates),
@@ -70,8 +71,9 @@ export class Controller {
     const session = await startSession();
     try {
       await profileChecker(req.user?._id as ObjectId);
-      const { fee, description, address, coordinates, addressNotes } = req.body;
+      const { title, fee, description, address, coordinates, addressNotes } = req.body;
       const newJob = new Job({
+        title: title,
         description: description,
         address: address,
         coordinates,
