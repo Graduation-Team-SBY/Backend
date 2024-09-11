@@ -18,8 +18,9 @@ export class Controller {
     const session = await startSession();
     try {
       await profileChecker(req.user?._id as ObjectId);
-      const { fee, description, address, coordinates, addressNotes } = req.body;
+      const { title, fee, description, address, coordinates, addressNotes } = req.body;
       const newJob = new Job({
+        title: title,
         description: description,
         address: address,
         coordinates,
@@ -70,8 +71,9 @@ export class Controller {
     const session = await startSession();
     try {
       await profileChecker(req.user?._id as ObjectId);
-      const { fee, description, address, coordinates, addressNotes } = req.body;
+      const { title, fee, description, address, coordinates, addressNotes } = req.body;
       const newJob = new Job({
+        title: title,
         description: description,
         address: address,
         coordinates,
@@ -258,16 +260,10 @@ export class Controller {
         },
         {
           $lookup: {
-            from: "categories",
-            localField: "categoryId",
-            foreignField: "_id",
-            as: "category",
-          },
-        },
-        {
-          $unwind: {
-            path: "$category",
-            preserveNullAndEmptyArrays: true,
+            from: "jobrequests",
+            localField: "_id",
+            foreignField: "jobId",
+            as: "workers",
           },
         },
         {
@@ -284,6 +280,81 @@ export class Controller {
             preserveNullAndEmptyArrays: true,
           },
         },
+        {
+          $project: {
+            "client.dateOfBirth": 0,
+            "client.address": 0,
+          },
+        },
+        {
+          $lookup: {
+            from: "workerprofiles",
+            localField: "workers.workerId",
+            foreignField: "userId",
+            as: "workers",
+            pipeline: [
+              {
+                $lookup: {
+                  from: "profiles",
+                  localField: "userId",
+                  foreignField: "userId",
+                  as: "detail",
+                },
+              },
+              {
+                $project: {
+                  "detail.dateOfBirth": 0,
+                  "detail.address": 0,
+                },
+              },
+              {
+                $unwind: {
+                  path: "$detail",
+                  preserveNullAndEmptyArrays: true,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: "jobstatuses",
+            localField: "_id",
+            foreignField: "jobId",
+            as: "status",
+          },
+        },
+        {
+          $unwind: {
+            path: "$status",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $lookup: {
+            from: "categories",
+            localField: "categoryId",
+            foreignField: "_id",
+            as: "category",
+          },
+        },
+        {
+          $unwind: {
+            path: "$category",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $project: {
+            "workers.address": 0,
+            "workers.dateOfBirth": 0,
+            "workers.profilePicture": 0,
+            "workers.rating": 0,
+            "workers.createdAt": 0,
+            "workers.updatedAt": 0,
+            "workers.jobDone": 0,
+          },
+        }
       ];
       const job = await Job.aggregate(agg);
       if (!job.length) {
@@ -299,12 +370,89 @@ export class Controller {
     try {
       await profileWorkerChecker(req.user?._id as ObjectId);
       const { jobId } = req.params;
+      const agg = [
+        {
+          $match: {
+            _id: new ObjectId(jobId),
+          },
+        },
+        {
+          $lookup: {
+            from: "jobrequests",
+            localField: "_id",
+            foreignField: "jobId",
+            as: "workers",
+          },
+        },
+        {
+          $lookup: {
+            from: "workerprofiles",
+            localField: "workers.workerId",
+            foreignField: "userId",
+            as: "workers",
+            pipeline: [
+              {
+                $lookup: {
+                  from: "profiles",
+                  localField: "userId",
+                  foreignField: "userId",
+                  as: "detail",
+                },
+              },
+              {
+                $project: {
+                  "detail.dateOfBirth": 0,
+                  "detail.address": 0,
+                },
+              },
+              {
+                $unwind: {
+                  path: "$detail",
+                  preserveNullAndEmptyArrays: true,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: "jobstatuses",
+            localField: "_id",
+            foreignField: "jobId",
+            as: "status",
+          },
+        },
+        {
+          $unwind: {
+            path: "$status",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $lookup: {
+            from: "categories",
+            localField: "categoryId",
+            foreignField: "_id",
+            as: "category",
+          },
+        },
+        {
+          $unwind: {
+            path: "$category",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+      ];
+      const job = await Job.aggregate(agg);
+      if (job[0].workers.some((val: { userId: ObjectId }) => `${val.userId}` === `${req.user?._id}`)) {
+        throw {name: 'JobAppliedAlready'}
+      }
       const newJobReq = new JobRequest({
         jobId: new ObjectId(jobId),
         workerId: req.user?._id,
       });
       await newJobReq.save();
-      res.status(201).json(newJobReq);
+      res.status(201).json({message: 'Successfully applied to this job!'});
     } catch (err) {
       next(err);
     }
