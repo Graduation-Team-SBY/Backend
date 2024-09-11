@@ -26,7 +26,7 @@ export class Controller {
         coordinates: JSON.parse(coordinates),
         addressNotes,
         fee: Number(fee),
-        categoryId: new ObjectId("66d97dfec793c4c4de7c2db0"),
+        categoryId: new ObjectId("66e12f48bd16de27f49d7de3"),
         clientId: req.user?._id,
       });
       await session.withTransaction(async () => {
@@ -79,7 +79,7 @@ export class Controller {
         coordinates,
         addressNotes,
         fee: Number(fee),
-        categoryId: new ObjectId("66d97e7518cd9c2062da3d98"),
+        categoryId: new ObjectId("66e12f48bd16de27f49d7de4"),
         clientId: req.user?._id,
       });
       await session.withTransaction(async () => {
@@ -168,7 +168,7 @@ export class Controller {
         });
       }
       const jobs = await Job.aggregate(agg)
-        .unwind("category")
+        .unwind('category')
         .sort({ createdAt: sortOrder as SortOrder });
       res.status(200).json(jobs);
     } catch (err) {
