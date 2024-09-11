@@ -13,6 +13,7 @@ import { title } from "process";
 import { JobStatus } from "../models/jobstatus";
 import { JobRequest } from "../models/jobrequest";
 import { Transaction } from "../models/transaction";
+import { Chat } from "../models/chat";
 
 const MONGO_URI : any = process.env.MONGO_URI;
 let tokenClient : string;
@@ -118,6 +119,23 @@ const workerProfileSeed = [
     }
 ]
 
+const chatSeed = [
+    {
+        _id: new ObjectId(),
+        content: [
+            {
+                _id : new ObjectId(),
+                senderId: userSeed[0]._id,
+                message: "Test"
+            }
+        ]
+    },
+    {
+        _id: new ObjectId(),
+        content: []
+    }
+]
+
 const jobSeed = [
     {
         _id: new ObjectId(),
@@ -153,6 +171,7 @@ const jobSeed = [
         images: null,
         clientId: userSeed[0]._id,
         workerId: null,
+        chatId: chatSeed[0]._id,
         categoryId: new ObjectId(`66e11fc199da71c3d8a31e9c`)
     },
     {
@@ -165,6 +184,7 @@ const jobSeed = [
         images: null,
         clientId: userSeed[0]._id,
         workerId: null,
+        chatId: chatSeed[1]._id,
         categoryId: new ObjectId(`66e11fc199da71c3d8a31e9c`)
     },
     {
@@ -199,6 +219,7 @@ beforeAll(async () => {
         await Wallet.insertMany(walletSeed);
         await Profile.insertMany(clientProfileSeed);
         await WorkerProfile.insertMany(workerProfileSeed);
+        await Chat.insertMany(chatSeed);
         await Job.insertMany(jobSeed);
         await JobStatus.insertMany(jobStatusSeed)
 
@@ -218,6 +239,7 @@ afterAll(async () => {
         await Transaction.deleteMany();
         await JobStatus.deleteMany();
         await JobRequest.deleteMany();
+        await Chat.deleteMany();
         await Job.deleteMany();
         await WorkerProfile.deleteMany();
         await Profile.deleteMany();
@@ -840,6 +862,51 @@ describe(`GET /workers/jobs`, () => {
 
             expect(response.body).toBeInstanceOf(Object);
             expect(response.body).toHaveProperty(`message`, `Insufficient privileges to do this action`);
+        })
+    })
+})
+
+describe(`GET /chat/:jobId`, () => {
+    describe(`Success`, () => {
+        test(`Success Get Chat Log Based On Job Id List 200`, async () => {
+            const jobId = String(jobSeed[2]._id);
+            const response = await request(app)
+                .get(`/chat/${jobId}`)
+                .set(`Authorization`, `Bearer ${tokenClient}`);
+
+            expect(response.body).toBeInstanceOf(Array);
+            expect(response.body[0]).toHaveProperty(`_id`, expect.any(String));
+        })
+    })
+
+    describe(`Failed`, () => {
+        test(`Failed 401, Unauthenticated No Token`, async () => {
+            const jobId = String(jobSeed[2]._id);
+            const response = await request(app)
+                .get(`/chat/${jobId}`)
+
+            expect(response.body).toBeInstanceOf(Object);
+            expect(response.body).toHaveProperty(`message`, `Invalid access token`);
+        })
+
+        test(`Failed 401, Unauthenticated Invalid Token`, async () => {
+            const jobId = String(jobSeed[2]._id);
+            const response = await request(app)
+                .get(`/chat/${jobId}`)
+                .set(`Authorization`, `Bearer ${tokenClient}fwfbda`);
+
+            expect(response.body).toBeInstanceOf(Object);
+            expect(response.body).toHaveProperty(`message`, `Invalid access token`);
+        })
+
+        test(`Failed 404, Job Not Found`, async () => {
+            const jobIdError = String(jobSeed[3]._id);
+            const response = await request(app)
+                .get(`/chat/${jobIdError}`)
+                .set(`Authorization`, `Bearer ${tokenClient}`);
+
+            expect(response.body).toBeInstanceOf(Object);
+            expect(response.body).toHaveProperty(`message`, `Data Not Found!`);
         })
     })
 })
