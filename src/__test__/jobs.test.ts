@@ -528,6 +528,65 @@ describe(`GET /workers/jobs/worker`, () => {
     })
 })
 
+describe(`GET /workers/jobs/worker/newest`, () => {
+    describe(`Success`, () => {
+        test(`Success Get The Newest Job List 200`, async () => {
+            const response = await request(app)
+                .get(`/workers/jobs/worker/newest`)
+                .set(`Authorization`, `Bearer ${tokenWorker}`);
+
+            expect(response.body).toBeInstanceOf(Array);
+            expect(response.body[0]).toHaveProperty(`_id`, expect.any(String));
+        })
+
+        test(`Success Get The Newest Job List With ascending sort and Nitip category 200`, async () => {
+            const response = await request(app)
+                .get(`/workers/jobs/worker/newest?sort=asc&category=Nitip`)
+                .set(`Authorization`, `Bearer ${tokenWorker}`);
+
+            expect(response.body).toBeInstanceOf(Array);
+            expect(response.body[0]).toHaveProperty(`_id`, expect.any(String));
+        })
+
+        test(`Success Get The Newest Job List With descending sort 200`, async () => {
+            const response = await request(app)
+                .get(`/workers/jobs/worker/newest?sort=desc`)
+                .set(`Authorization`, `Bearer ${tokenWorker}`);
+
+            expect(response.body).toBeInstanceOf(Array);
+            expect(response.body[0]).toHaveProperty(`_id`, expect.any(String));
+        })
+    })
+
+    describe(`Failed`, () => {
+        test(`Failed 401, Unauthenticated No Token`, async () => {
+            const response = await request(app)
+                .get(`/workers/jobs/worker/newest`)
+
+            expect(response.body).toBeInstanceOf(Object);
+            expect(response.body).toHaveProperty(`message`, `Invalid access token`);
+        })
+
+        test(`Failed 401, Unauthenticated Invalid Token`, async () => {
+            const response = await request(app)
+                .get(`/workers/jobs/worker/newest`)
+                .set(`Authorization`, `Bearer ${tokenWorker}fwfbda`);
+
+            expect(response.body).toBeInstanceOf(Object);
+            expect(response.body).toHaveProperty(`message`, `Invalid access token`);
+        })
+
+        test(`Failed 403, Client User attempting to worker routes`, async () => {
+            const response = await request(app)
+                .get(`/workers/jobs/worker/newest`)
+                .set(`Authorization`, `Bearer ${tokenClient}`);
+
+            expect(response.body).toBeInstanceOf(Object);
+            expect(response.body).toHaveProperty(`message`, `Insufficient privileges to do this action`);
+        })
+    })
+})
+
 describe(`GET /jobs/:job`, () => {
     describe(`Success`, () => {
         test(`Success Get Job Detail 200`, async () => {

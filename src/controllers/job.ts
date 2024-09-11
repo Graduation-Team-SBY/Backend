@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { Job } from "../models/job";
 import { ObjectId } from "mongodb";
-import { uploadImageFiles, uploadWorkerConfirm } from "../services/firebase";
+import { uploadImageFiles, uploadWorkerConfirm, uploadReviewImages } from "../services/firebase";
 import { SortOrder, startSession } from "mongoose";
 import { AuthRequest } from "../types";
 import { JobRequest } from "../models/jobrequest";
@@ -26,7 +26,7 @@ export class Controller {
         coordinates,
         addressNotes,
         fee: Number(fee),
-        categoryId: new ObjectId("66e11fc199da71c3d8a31e9d"),
+        categoryId: new ObjectId("66e11fc199da71c3d8a31e9c"),
         clientId: req.user?._id,
       });
       await session.withTransaction(async () => {
@@ -79,7 +79,7 @@ export class Controller {
         coordinates,
         addressNotes,
         fee: Number(fee),
-        categoryId: new ObjectId("66d97e7518cd9c2062da3d98"),
+        categoryId: new ObjectId("66e11fc199da71c3d8a31e9d"),
         clientId: req.user?._id,
       });
       await session.withTransaction(async () => {
@@ -862,7 +862,7 @@ export class Controller {
       await session.withTransaction(async () => {
         const ratingNow = Number(((((worker?.rating as number) * (worker?.jobDone as number)) + Number(rating)) / (worker?.jobDone as number + 1)).toFixed(1));
         await worker?.updateOne({ rating: ratingNow, $inc: { jobDone: 1 } }, { session });
-        const reviewImageUrls = await uploadImageFiles(req.files as Express.Multer.File[], user?._id, new ObjectId(jobId));
+        const reviewImageUrls = await uploadReviewImages(req.files as Express.Multer.File[], user?._id, new ObjectId(jobId));
         const newReview = new Review({ jobId, description, rating, images: reviewImageUrls });
         await newReview.save({ session });
         res.status(201).json({ message: "Successfully created review" });

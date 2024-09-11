@@ -368,18 +368,18 @@ describe(`GET /profile/histories`, () => {
             expect(response.body[0]).toHaveProperty(`_id`, expect.any(String));
         })
         
-        test(`Success Get Client transaction histories filtered by week 200`, async () => {
+        test(`Success Get Client transaction histories filtered by week and ascending order 200`, async () => {
             const response = await request(app)
-                .get(`/profile/histories?sort=desc&filter=week`)
+                .get(`/profile/histories?sort=asc&filter=week`)
                 .set(`Authorization`, `Bearer ${tokenClient}`);
 
             expect(response.body).toBeInstanceOf(Array);
             expect(response.body[0]).toHaveProperty(`_id`, expect.any(String));
         })
 
-        test(`Success Get Client transaction histories by month 200`, async () => {
+        test(`Success Get Client transaction histories filtered by year and descending order 200`, async () => {
             const response = await request(app)
-                .get(`/profile/histories?filter=year`)
+                .get(`/profile/histories?sort=desc&filter=year`)
                 .set(`Authorization`, `Bearer ${tokenClient}`);
 
             expect(response.body).toBeInstanceOf(Array);
