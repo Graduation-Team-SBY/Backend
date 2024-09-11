@@ -4,6 +4,7 @@ import { app } from "../app";
 import { signToken } from "../helpers/jwt";
 import { hashPassword } from "../helpers/bcrypt";
 import { User } from "../models/user";
+import { WorkerProfile } from "../models/workerprofile";
 import { ObjectId } from "mongodb";
 
 const MONGO_URI : any = process.env.MONGO_URI;
@@ -87,34 +88,34 @@ afterAll(async () => {
     }
 });
 
-// describe(`GET /clients/best-yasa`, () => {
-//     describe(`Success`, () => {
-//         test(`Success Get The Best Yasa list 200`, async () => {
-//             const response = await request(app)
-//                 .get(`/clients/best-yasa`)
-//                 .set(`Authorization`, `Bearer ${tokenClient}`);
+describe(`GET /clients/best-yasa`, () => {
+    describe(`Success`, () => {
+        test(`Success Get The Best Yasa list 200`, async () => {
+            const response = await request(app)
+                .get(`/clients/best-yasa`)
+                .set(`Authorization`, `Bearer ${tokenClient}`);
 
-//             expect(response.body).toBeInstanceOf(Array);
-//             expect(response.body[0]).toHaveProperty(`_id`, expect.any(String));
-//         })
-//     })
+            expect(response.body).toBeInstanceOf(Array);
+            expect(response.body[0]).toHaveProperty(`_id`, expect.any(String));
+        })
+    })
 
-//     describe(`Failed`, () => {
-//         test(`Failed 401, Unauthenticated No Token`, async () => {
-//             const response = await request(app)
-//                 .get(`/clients/best-yasa`);
+    describe(`Failed`, () => {
+        test(`Failed 401, Unauthenticated No Token`, async () => {
+            const response = await request(app)
+                .get(`/clients/best-yasa`);
 
-//             expect(response.body).toBeInstanceOf(Object);
-//             expect(response.body).toHaveProperty(`message`, `Invalid access token`);
-//         })
+            expect(response.body).toBeInstanceOf(Object);
+            expect(response.body).toHaveProperty(`message`, `Invalid access token`);
+        })
 
-//         test(`Failed 401, Unauthenticated Invalid Token`, async () => {
-//             const response = await request(app)
-//                 .get(`/clients/best-yasa`)
-//                 .set(`Authorization`, `Bearer ${tokenClient}fwfbda`);
+        test(`Failed 401, Unauthenticated Invalid Token`, async () => {
+            const response = await request(app)
+                .get(`/clients/best-yasa`)
+                .set(`Authorization`, `Bearer ${tokenClient}fwfbda`);
 
-//             expect(response.body).toBeInstanceOf(Object);
-//             expect(response.body).toHaveProperty(`message`, `Invalid access token`);
-//         })
-//     })
-// })
+            expect(response.body).toBeInstanceOf(Object);
+            expect(response.body).toHaveProperty(`message`, `Invalid access token`);
+        })
+    })
+})

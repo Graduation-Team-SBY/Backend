@@ -32,6 +32,6 @@ socketFunc(io);
 
 app.use("/", router);
 
-server.listen(PORT, () => {
-  console.log("Server running at PORT: ", PORT);
-});
+// server.listen(PORT, () => {
+//   console.log("Server running at PORT: ", PORT);
+// });

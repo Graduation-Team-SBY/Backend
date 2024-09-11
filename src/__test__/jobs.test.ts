@@ -587,6 +587,16 @@ describe(`POST /workers/jobs/:jobId`, () => {
     })
 
     describe(`Failed`, () => {
+        test(`Failed 400, Worker already applied for the job`, async () => {
+            const jobId = String(jobSeed[2]._id);
+            const response = await request(app)
+                .post(`/workers/jobs/${jobId}`)
+                .set(`Authorization`, `Bearer ${tokenWorker}`);
+
+            expect(response.body).toBeInstanceOf(Object);
+            expect(response.body).toHaveProperty(`message`, `You already applied to this job`);
+        })
+
         test(`Failed 400, Worker Not Complete The Profile`, async () => {
             const jobId = String(jobSeed[2]._id);
             const response = await request(app)

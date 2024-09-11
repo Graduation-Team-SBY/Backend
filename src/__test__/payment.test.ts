@@ -65,6 +65,8 @@ const walletSeed = [
     }
 ]
 
+const tempTopupId : any = []
+
 beforeAll(async () => {
     try {
         await mongoose.connect(MONGO_URI, { dbName: "testing"});
@@ -100,6 +102,8 @@ describe(`POST /payment/topup`, () => {
                 })
                 .set(`Authorization`, `Bearer ${tokenClient}`);
 
+            tempTopupId.push(response.body);
+
             expect(response.body).toBeInstanceOf(Object);
             expect(response.body).toHaveProperty(`topupId`, expect.any(String));
         })
@@ -110,7 +114,7 @@ describe(`POST /payment/topup`, () => {
             const response = await request(app)
                 .post(`/payment/topup`)
                 .field({
-                    amount: `100000`
+                    amount: 100000
                 })
 
             expect(response.body).toBeInstanceOf(Object);
@@ -137,7 +141,7 @@ describe(`PATCH /profile/wallet`, () => {
             const response = await request(app)
                 .patch(`/profile/wallet`)
                 .send({
-                    topupId: `172599500616766dfc117ebbee2647f672ac3`
+                    topupId: tempTopupId[0].topupId
                 })
                 .set(`Authorization`, `Bearer ${tokenClient}`);
 
