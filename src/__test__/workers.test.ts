@@ -2,6 +2,9 @@ import request from "supertest";
 import mongoose from "mongoose";
 import { app } from "../app";
 import { signToken } from "../helpers/jwt";
+import { hashPassword } from "../helpers/bcrypt";
+import { User } from "../models/user";
+import { ObjectId } from "mongodb";
 
 const MONGO_URI : any = process.env.MONGO_URI;
 let tokenClient : string;
@@ -9,11 +12,44 @@ let tokenWorker : string;
 let tokenClientError : string;
 let tokenWorkerError : string;
 
+const userSeed = [
+    {
+        _id: new ObjectId(),
+        email: `client1@email.com`,
+        phoneNumber: `08987654321`,
+        password: hashPassword(`cheetah123`),
+        role: `client`
+    },
+    {
+        _id: new ObjectId(),
+        email: `client2@email.com`,
+        phoneNumber: `08977664321`,
+        password: hashPassword(`cheetah123`),
+        role: `client`
+    },
+    {
+        _id: new ObjectId(),
+        email: `worker1@email.com`,
+        phoneNumber: `08987554521`,
+        password: hashPassword(`cheetah123`),
+        role: `worker`
+    },
+    {
+        _id: new ObjectId(),
+        email: `worker2@email.com`,
+        phoneNumber: `08977664441`,
+        password: hashPassword(`cheetah123`),
+        role: `worker`
+    }
+]
+
 beforeAll(async () => {
     try {
         await mongoose.connect(MONGO_URI, { dbName: "testing"});
 
-        tokenClient = signToken({ _id: `66dfc117ebbee2647f672ac3` });
+        await User.insertMany(userSeed);
+
+        tokenClient = signToken({ _id: String(userSeed[0]._id) });
         tokenWorker = signToken({ _id: `66dfc17bebbee2647f672acf` });
         tokenClientError = signToken({ _id: `66dfd17ce534116f78e27b14` });
         tokenWorkerError = signToken({ _id: `66dfe5bee534116f78e27b3f` });

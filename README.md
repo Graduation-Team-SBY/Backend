@@ -1,4 +1,4 @@
-# AssistMaster (Group Project) API Documentation
+# Yangtu (AssistMaster) API Documentation
 
 ## Endpoints
 
@@ -104,6 +104,7 @@ _Response (200 - OK)_
 ```json
 {
     "_id": "ObjectId",
+    "title": "String",
     "description": "String",
     "address": "String",
     "fee": "number",
@@ -132,7 +133,7 @@ _Response (200 - OK)_
         "userId": "ObjectId",
         "createdAt": "Date",
         "updatedAt": "Date",
-        "__v": 0
+        "__v": "Number"
     }
 }
 ```
@@ -155,7 +156,7 @@ Description:
 ```json
 {
     "sort": "String (Default: asc)",
-    "filter": "String (Default: week)"
+    "filter": "String (Default: month)"
 }
 ```
 
@@ -222,14 +223,14 @@ Description:
 }
 ```
 
-_Response (200 - OK)
+_Response (200 - OK)_
 ```json
 {
     "message": "TopUp Success"
 }
 ```
 
-_Response (400 - Bad Request)
+_Response (400 - Bad Request)_
 ```json
 {
     "message": "TopUp Failed"
@@ -238,10 +239,43 @@ _Response (400 - Bad Request)
 
 &nbsp;
 
-## 6. POST /clients/register
+## 6. GET /clients/best-yasa
+
+Description:
+- Getting top 5 list of the best worker(Yasa) based on rating
+
+- Headers:
+```json
+{
+    "access_token": "String"
+}
+```
+
+_Response (200 - OK)_
+```json
+[
+    {
+        "_id": "ObjectId",
+        "userId": "ObjectId",
+        "bio": "String",
+        "jobDone": "Number",
+        "profilePicture": "String",
+        "rating": "Number",
+        "amount": "Number",
+        "createdAt": "Date",
+        "updatedAt": "Date",
+        "__v": "Number"
+    }
+    ...
+]
+```
+
+&nbsp;
+
+## 7. POST /clients/register
 
 Description: 
-- Register a new user and wallet as client
+- Register a new user, profile, and wallet as client. Then send welcome email to registered client.
 
 - Body:
 ```json
@@ -298,7 +332,7 @@ OR
 
 &nbsp;
 
-## 7. PATCH /clients/profile
+## 8. PATCH /clients/profile
 
 Description:
 - Updating Client's profile information, including name, date of birth, address, and image profile
@@ -333,16 +367,9 @@ _Response (200 - OK)_
 }
 ```
 
-_Response (400 - Bad Request)_
-```json
-{
-  "message": "Failed to upload image, please try again!"
-}
-```
-
 &nbsp;
 
-## 8. GET /clients/profile
+## 9. GET /clients/profile
 
 Description:
 - Getting the profile information of current login user who has client role
@@ -379,7 +406,7 @@ _Response (200 - OK)_
 
 &nbsp;
 
-## 9. GET /clients/jobs/active
+## 10. GET /clients/jobs/active
 
 Description:
 - Getting the jobs list that are currently active from current login user, it can be sorted by createdAt and filtered by category
@@ -404,6 +431,7 @@ _Response(200 - OK)_
 [
     {
         "_id": "ObjectId",
+        "title": "String",
         "description": "String",
         "addess": "String",
         "fee": "Number",
@@ -440,7 +468,7 @@ _Response(200 - OK)_
 
 &nbsp;
 
-## 10. POST /clients/jobs/bersih
+## 11. POST /clients/jobs/bersih
 
 Description:
 - Creating a new "Bersih"(Cleaning) Job from current login user. The input will be fee, description, address, and array of image data.
@@ -455,9 +483,15 @@ Description:
 - Body:
 ```json
 {
+    "title": "String",
     "fee": "Number",
     "description": "String",
-    "address": "String"
+    "address": "String",
+    "coordinates": {
+        "lat": "Number",
+        "lng": "Number"
+    },
+    "addressNotes": "String"
 }
 ```
 
@@ -480,6 +514,7 @@ _Response (400 - Bad Request)_
 {
     "message": "Fill in your profile first!"
 }
+OR
 {
     "message": "You don't have enough money"
 }
@@ -491,7 +526,7 @@ OR
 
 &nbsp;
 
-## 11. POST /clients/jobs/belanja
+## 12. POST /clients/jobs/belanja
 
 Description:
 - Creating a new "Belanja"(Shopping) Job from current login user. The input will be fee, description, address.
@@ -506,9 +541,15 @@ Description:
 - Body:
 ```json
 {
+    "title": "String",
     "fee": "Number",
     "description": "String",
-    "address": "String"
+    "address": "String",
+    "coordinates": {
+        "lat": "Number",
+        "lng": "Number"
+    },
+    "addressNotes": "String"
 }
 ```
 
@@ -532,10 +573,10 @@ OR
 
 &nbsp;
 
-## 12. GET /clients/jobs/:jobId/workers
+## 13. GET /clients/jobs/:jobId/workers
 
 Description:
-- Get the job detail and worker list with detail based on jobId.
+- Get the job detail and candidate worker list with detail based on jobId.
 
 - Headers:
 ```json
@@ -586,10 +627,10 @@ _Response(200 - OK)_
 
 &nbsp;
 
-## 13. PATCH /clients/jobs/:jobId/client
+## 14. PATCH /clients/jobs/:jobId/client
 
 Description:
-- Updating isClientConfirmed boolean on specific job based jobId.
+- Updating isClientConfirmed boolean on specific job and complete the job based jobId.
 
 - Headers:
 ```json
@@ -621,10 +662,60 @@ _Response (400 - Bad Request)_
 
 &nbsp;
 
-## 14. PATCH /clients/jobs/:jobId/:workerId
+## 15. POST /clients/jobs/:jobId/review
 
 Description:
-- Updating workerId based on parameter and jobId. Then creating new job status based on jobId.
+- Create a review for the worker based the job it done then update the worker rating's and reviews list.
+
+- Headers:
+```json
+{
+    "access_token": "String"
+}
+```
+
+- Params:
+```json
+{
+    "jobId": "String"
+}
+```
+
+- Body:
+```json
+{
+    "description": "String",
+    "rating": "Number"
+}
+```
+
+- Files:
+```json
+{
+    "image": ["Image"]
+}
+```
+
+_Response (200 - OK)_
+```json
+{
+    "message": "Successfully update job order status"
+}
+```
+
+_Response (400 - Bad Request)_
+```json
+{
+    "message": "Please input the rating!"
+}
+```
+
+&nbsp;
+
+## 16. PATCH /clients/jobs/:jobId/:workerId
+
+Description:
+- Updating workerId based on parameter and jobId. Then creating new job status based on jobId. Picking the selected worker based on workerId
 
 - Headers:
 ```json
@@ -657,10 +748,10 @@ _Response (400 - Bad Request)_
 
 &nbsp;
 
-## 15. DELETE /clients/jobs/:jobId
+## 17. DELETE /clients/jobs/:jobId
 
 Description:
-- Cancelling the job order and delete the job from database and refund the user balance.
+- Cancelling the job order and delete the job from database and refund the user balance. The deletion fail if there is worker assigned for the job
 
 - Headers:
 ```json
@@ -692,7 +783,7 @@ _Response (403 - Forbidden)_
 
 &nbsp;
 
-## 16. POST /workers/register
+## 18. POST /workers/register
 
 Description: 
 - Register a new user and wallet as worker
@@ -752,7 +843,7 @@ OR
 
 &nbsp;
 
-## 17. GET /workers/profile
+## 19. GET /workers/profile
 
 Description:
 - Getting the profile information of current login user who has worker role
@@ -789,7 +880,7 @@ _Response (200 - OK)_
 
 &nbsp;
 
-## 18. PATCH /workers/profile
+## 20. PATCH /workers/profile
 
 Description:
 - Updating Worker's profile information, including name, date of birth, address, and image profile
@@ -824,16 +915,9 @@ _Response (200 - OK)_
 }
 ```
 
-_Response (400 - Bad Request)_
-```json
-{
-  "message": "Failed to upload image, please try again!"
-}
-```
-
 &nbsp;
 
-## 19. GET /workers/profile/reviews
+## 21. GET /workers/profile/reviews
 
 Description:
 - Getting the list of reviews based on current login user who has worker role
@@ -863,7 +947,7 @@ _Response (200 - OK)_
 
 &nbsp;
 
-## 20. GET /workers/jobs
+## 22. GET /workers/jobs
 
 Description:
 - Getting the list of jobs that are currently worked by current login user with worker role
@@ -908,7 +992,7 @@ _Response(200 - OK)_
 
 &nbsp;
 
-## 21. GET /workers/jobs/worker
+## 23. GET /workers/jobs/worker
 
 Description:
 - Getting the list of jobs that is open (No worker confirmed yet), it can be sorted by createdAt and filtered by category
@@ -970,15 +1054,22 @@ _Response (200 - OK)_
 
 &nbsp;
 
-## 22. PATCH /workers/:jobId/worker
+## 24. PATCH /workers/:jobId/worker
 
 Description:
-- Updating Job Status to become true boolean true with uploading image
+- Updating Job Status to become true boolean true with uploading image. Confirming the job completion from worker
 
 - Headers:
 ```json
 {
     "access_token": "String"
+}
+```
+
+- Params:
+```json
+{
+    "jobId": "String"
 }
 ```
 
@@ -1005,7 +1096,7 @@ _Response (400 - Bad Request)_
 
 &nbsp;
 
-## 23. POST /workers/:jobId
+## 25. POST /workers/:jobId
 
 Description:
 - Creating new job request based on jobId request for applying job as worker
@@ -1027,12 +1118,7 @@ Description:
 _Response (201 - Created)_
 ```json
 {
-    "jobId": "Object",
-    "workerId": "ObjectId",
-    "createdAt": "Date",
-    "updatedAt": "Date",
-    "_id": "ObjectId",
-    "__v": "Number",
+    "message": "Successfully applied to this job!"
 }
 ```
 
@@ -1040,6 +1126,10 @@ _Response (400 - Bad Request)_
 ```json
 {
     "message": "Fill in your profile first!"
+}
+OR
+{
+    "message": "You already applied to this job"
 }
 ```
 
@@ -1054,6 +1144,13 @@ Description:
 ```json
 {
     "access_token": "String"
+}
+```
+
+- Body:
+```json
+{
+    "amount": "Number"
 }
 ```
 
