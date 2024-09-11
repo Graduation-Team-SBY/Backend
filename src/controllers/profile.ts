@@ -108,7 +108,7 @@ export class Controller {
   static async getOrderHistories(req: Request & { user?: { _id: ObjectId } }, res: Response, next: NextFunction) {
     try {
       const { user } = req;
-      const { sort = "asc", filter = "month" } = req.query;
+      const { sort = "desc", filter = "month" } = req.query;
       let dateFilter = {};
       if (filter) {
         const { startDate, endDate } = getDateRange(filter as "week" | "month" | "year");
@@ -143,9 +143,23 @@ export class Controller {
           },
         },
         {
+          $lookup: {
+            from: "workerprofiles",
+            foreignField: "userId",
+            localField: "workerId",
+            as: "worker",
+          },
+        },
+        {
           $unwind: {
             preserveNullAndEmptyArrays: true,
             path: "$jobDetail",
+          },
+        },
+        {
+          $unwind: {
+            preserveNullAndEmptyArrays: true,
+            path: "$worker",
           },
         },
         {
@@ -163,11 +177,13 @@ export class Controller {
           },
         },
         {
-          $sort: { createdAt: sort === "desc" ? -1 : 1 },
+          $sort: { createdAt: sort === "asc" ? 1 : -1 },
         },
         {
           $project: {
             categoryDetail: 0,
+            "worker.dateOfBirth": 0,
+            "worker.address": 0
           },
         },
       ]);
