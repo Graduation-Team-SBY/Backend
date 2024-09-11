@@ -26,7 +26,7 @@ export class Controller {
         coordinates,
         addressNotes,
         fee: Number(fee),
-        categoryId: new ObjectId("66d97dfec793c4c4de7c2db0"),
+        categoryId: new ObjectId("66e11fc199da71c3d8a31e9d"),
         clientId: req.user?._id,
       });
       await session.withTransaction(async () => {
@@ -79,7 +79,7 @@ export class Controller {
         coordinates,
         addressNotes,
         fee: Number(fee),
-        categoryId: new ObjectId("66d97e7518cd9c2062da3d98"),
+        categoryId: new ObjectId("66e11fc199da71c3d8a31e9c"),
         clientId: req.user?._id,
       });
       await session.withTransaction(async () => {

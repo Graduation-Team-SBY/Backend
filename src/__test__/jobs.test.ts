@@ -2,6 +2,17 @@ import request from "supertest";
 import mongoose from "mongoose";
 import { app } from "../app";
 import { signToken } from "../helpers/jwt";
+import { hashPassword } from "../helpers/bcrypt";
+import { ObjectId } from "mongodb";
+import { User } from "../models/user";
+import { Wallet } from "../models/wallet";
+import { Profile } from "../models/profile";
+import { WorkerProfile } from "../models/workerprofile";
+import { Job } from "../models/job";
+import { title } from "process";
+import { JobStatus } from "../models/jobstatus";
+import { JobRequest } from "../models/jobrequest";
+import { Transaction } from "../models/transaction";
 
 const MONGO_URI : any = process.env.MONGO_URI;
 let tokenClient : string;
@@ -11,14 +22,190 @@ let tokenWorkerEmpty : string;
 let tokenClientPickJob : string;
 let tokenWorkerReviews : string;
 
+const userSeed = [
+    {
+        _id: new ObjectId(),
+        email: `client1@email.com`,
+        phoneNumber: `08987654321`,
+        password: hashPassword(`cheetah123`),
+        role: `client`
+    },
+    {
+        _id: new ObjectId(),
+        email: `client2@email.com`,
+        phoneNumber: `08977664321`,
+        password: hashPassword(`cheetah123`),
+        role: `client`
+    },
+    {
+        _id: new ObjectId(),
+        email: `worker1@email.com`,
+        phoneNumber: `08987554521`,
+        password: hashPassword(`cheetah123`),
+        role: `worker`
+    },
+    {
+        _id: new ObjectId(),
+        email: `worker2@email.com`,
+        phoneNumber: `08977664441`,
+        password: hashPassword(`cheetah123`),
+        role: `worker`
+    }
+]
+
+const walletSeed = [
+    {
+        _id: new ObjectId(),
+        amount: 200000,
+        userId: userSeed[0]._id
+    },
+    {
+        _id: new ObjectId(),
+        amount: 200000,
+        userId: userSeed[2]._id
+    },
+    {
+        _id: new ObjectId(),
+        amount: 200000,
+        userId: userSeed[1]._id
+    },
+    {
+        _id: new ObjectId(),
+        amount: 200000,
+        userId: userSeed[3]._id
+    }
+]
+
+const clientProfileSeed = [
+    {
+        _id: new ObjectId(),
+        name: `Client 1 Test`,
+        dateOfBirth: new Date(`2000-11-16`),
+        profilePicture: `https://picsum.photos/200`,
+        address: `Paris van java, Bandung`,
+        userId: userSeed[0]._id
+    },
+    {
+        _id: new ObjectId(),
+        name: null,
+        dateOfBirth: null,
+        profilePicture: null,
+        address: null,
+        userId: userSeed[1]._id
+    }
+]
+
+const workerProfileSeed = [
+    {
+        _id: new ObjectId(),
+        name: `Worker 1 Test`,
+        dateOfBirth: new Date(`2000-11-16`),
+        profilePicture: `https://picsum.photos/200`,
+        address: `Paris van java, Bandung`,
+        jobDone: 2,
+        rating: 4,
+        userId: userSeed[2]._id
+    },
+    {
+        _id: new ObjectId(),
+        name: null,
+        dateOfBirth: null,
+        profilePicture: null,
+        address: null,
+        jobDone: 0,
+        rating: 0,
+        userId: userSeed[3]._id
+    }
+]
+
+const jobSeed = [
+    {
+        _id: new ObjectId(),
+        title: `Belikan Buah Segar`,
+        description: `Belikan Buah Anggur Hijau di Indomaret`,
+        address: `Keputih, Surabaya`,
+        adressNotes: `Depan Kost`,
+        fee: 2000,
+        images: null,
+        clientId: userSeed[0]._id,
+        workerId: userSeed[2]._id,
+        categoryId: new ObjectId(`66e11fc199da71c3d8a31e9c`)
+    },
+    {
+        _id: new ObjectId(),
+        title: `Belikan Baterai`,
+        description: `Belikan Baterai AAA di Indomaret`,
+        address: `Keputih, Surabaya`,
+        adressNotes: `Depan Kost`,
+        fee: 2000,
+        images: null,
+        clientId: userSeed[0]._id,
+        workerId: userSeed[2]._id,
+        categoryId: new ObjectId(`66e11fc199da71c3d8a31e9c`)
+    },
+    {
+        _id: new ObjectId(),
+        title: `Belikan Hotwheels`,
+        description: `Belikan Hotwheels di Indomaret`,
+        address: `Keputih, Surabaya`,
+        adressNotes: `Depan Kost`,
+        fee: 2000,
+        images: null,
+        clientId: userSeed[0]._id,
+        workerId: null,
+        categoryId: new ObjectId(`66e11fc199da71c3d8a31e9c`)
+    },
+    {
+        _id: new ObjectId(),
+        title: `Belikan Bakso`,
+        description: `Belikan Bakso di Indomaret`,
+        address: `Keputih, Surabaya`,
+        adressNotes: `Depan Kost`,
+        fee: 2000,
+        images: null,
+        clientId: userSeed[0]._id,
+        workerId: null,
+        categoryId: new ObjectId(`66e11fc199da71c3d8a31e9c`)
+    },
+    {
+        _id: new ObjectId(),
+        title: `Ngapain Sih`,
+        description: `Hapus Aja Ini`,
+        address: `Keputih, Surabaya`,
+        adressNotes: `Depan Kost`,
+        fee: 2000,
+        images: null,
+        clientId: userSeed[0]._id,
+        workerId: null,
+        categoryId: new ObjectId(`66e11fc199da71c3d8a31e9c`)
+    }
+]
+
+const jobStatusSeed = [
+    {
+        _id: new ObjectId(),
+        jobId: jobSeed[3]._id,
+        isWorkerConfirmed: false,
+        isClientConfirmed: true,
+        isDone: false
+    }
+]
+
 beforeAll(async () => {
     try {
         await mongoose.connect(MONGO_URI, { dbName: "testing"});
 
-        tokenClient = signToken({ _id: `66dfc117ebbee2647f672ac3` });
-        tokenWorker = signToken({ _id: `66dfc17bebbee2647f672acf` });
-        tokenClientEmpty = signToken({ _id: `66dfc120ebbee2647f672ac9` });
-        tokenWorkerEmpty = signToken({ _id: `66dfc182ebbee2647f672ad5` });
+        await User.insertMany(userSeed);
+        await Wallet.insertMany(walletSeed);
+        await Profile.insertMany(clientProfileSeed);
+        await WorkerProfile.insertMany(workerProfileSeed);
+        await Job.insertMany(jobSeed);
+        await JobStatus.insertMany(jobStatusSeed)
+
+        tokenClient = signToken({ _id: String(userSeed[0]._id) });
+        tokenWorker = signToken({ _id: String(userSeed[2]._id) });
+        tokenClientEmpty = signToken({ _id: String(userSeed[1]._id) });
+        tokenWorkerEmpty = signToken({ _id: String(userSeed[3]._id) });
         tokenClientPickJob = signToken({ _id: `66dc034d2efcced67245fdad`})
         tokenWorkerReviews = signToken({ _id: `66dc09e06f4066bc1defb4bf` });
     } catch (error) {
@@ -28,6 +215,15 @@ beforeAll(async () => {
 
 afterAll(async () => {
     try {
+        await Transaction.deleteMany();
+        await JobStatus.deleteMany();
+        await JobRequest.deleteMany();
+        await Job.deleteMany();
+        await WorkerProfile.deleteMany();
+        await Profile.deleteMany();
+        await Wallet.deleteMany();
+        await User.deleteMany();
+
         await mongoose.connection.close();
     } catch (error) {
         console.log(error);
@@ -40,6 +236,7 @@ describe(`POST /clients/jobs/belanja`, () => {
             const response = await request(app)
                 .post(`/clients/jobs/belanja`)
                 .send({
+                    title: "Red Bull",
                     fee: 1000,
                     description: `Beliin Red Bull`,
                     address: `Sinarmas Plaza, Surabaya`,
@@ -57,6 +254,7 @@ describe(`POST /clients/jobs/belanja`, () => {
             const response = await request(app)
                 .post(`/clients/jobs/belanja`)
                 .send({
+                    title: "Red Bull",
                     fee: 10000000,
                     description: `Beliin Red Bull`,
                     address: `Sinarmas Plaza, Surabaya`,
@@ -72,7 +270,8 @@ describe(`POST /clients/jobs/belanja`, () => {
             const response = await request(app)
                 .post(`/clients/jobs/belanja`)
                 .send({
-                    fee: 10000,
+                    title: "Red Bull",
+                    fee: 1000,
                     description: `Beliin Red Bull`,
                     address: `Sinarmas Plaza, Surabaya`,
                     addressNotes: `Ketemu di Lobby`
@@ -87,6 +286,7 @@ describe(`POST /clients/jobs/belanja`, () => {
             const response = await request(app)
                 .post(`/clients/jobs/belanja`)
                 .send({
+                    title: "Red Bull",
                     fee: 10000000,
                     description: `Beliin Red Bull`,
                     address: `Sinarmas Plaza, Surabaya`,
@@ -101,6 +301,7 @@ describe(`POST /clients/jobs/belanja`, () => {
             const response = await request(app)
                 .post(`/clients/jobs/belanja`)
                 .send({
+                    title: "Red Bull",
                     fee: 10000000,
                     description: `Beliin Red Bull`,
                     address: `Sinarmas Plaza, Surabaya`,
@@ -120,6 +321,7 @@ describe(`POST /clients/jobs/bersih`, () => {
             const response = await request(app)
                 .post(`/clients/jobs/bersih`)
                 .field({
+                    title: "Pembersihan Kost",
                     fee: 1000,
                     description: `Bersihkan Kost`,
                     address: `Bumi Marina Emas, Surabaya`,
@@ -138,6 +340,7 @@ describe(`POST /clients/jobs/bersih`, () => {
             const response = await request(app)
                 .post(`/clients/jobs/bersih`)
                 .field({
+                    title: "Pembersihan Kost",
                     fee: 1000,
                     description: `Bersihkan Kost`,
                     address: `Bumi Marina Emas, Surabaya`,
@@ -153,6 +356,7 @@ describe(`POST /clients/jobs/bersih`, () => {
             const response = await request(app)
                 .post(`/clients/jobs/bersih`)
                 .field({
+                    title: "Pembersihan Kost",
                     fee: 10000000,
                     description: `Bersihkan Kost`,
                     address: `Bumi Marina Emas, Surabaya`,
@@ -169,6 +373,7 @@ describe(`POST /clients/jobs/bersih`, () => {
             const response = await request(app)
                 .post(`/clients/jobs/bersih`)
                 .field({
+                    title: "Pembersihan Kost",
                     fee: 1000,
                     description: `Bersihkan Kost`,
                     address: `Bumi Marina Emas, Surabaya`,
@@ -326,7 +531,7 @@ describe(`GET /workers/jobs/worker`, () => {
 describe(`GET /jobs/:job`, () => {
     describe(`Success`, () => {
         test(`Success Get Job Detail 200`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+            const jobId = String(jobSeed[2]._id);
             const response = await request(app)
                 .get(`/jobs/${jobId}`)
                 .set(`Authorization`, `Bearer ${tokenWorker}`);
@@ -348,7 +553,7 @@ describe(`GET /jobs/:job`, () => {
         })
 
         test(`Failed 401, Unauthenticated No Token`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+            const jobId = String(jobSeed[2]._id);
             const response = await request(app)
                 .get(`/jobs/${jobId}`)
 
@@ -357,7 +562,7 @@ describe(`GET /jobs/:job`, () => {
         })
 
         test(`Failed 401, Unauthenticated Invalid Token`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+            const jobId = String(jobSeed[2]._id);
             const response = await request(app)
                 .get(`/jobs/${jobId}`)
                 .set(`Authorization`, `Bearer ${tokenWorker}fwfbda`);
@@ -368,22 +573,22 @@ describe(`GET /jobs/:job`, () => {
     })
 })
 
-describe(`POST /workers/jobs/:job`, () => {
+describe(`POST /workers/jobs/:jobId`, () => {
     describe(`Success`, () => {
         test(`Success Apply for a job 200`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+            const jobId = String(jobSeed[2]._id);
             const response = await request(app)
                 .post(`/workers/jobs/${jobId}`)
                 .set(`Authorization`, `Bearer ${tokenWorker}`);
 
             expect(response.body).toBeInstanceOf(Object);
-            expect(response.body).toHaveProperty(`_id`, expect.any(String));
+            expect(response.body).toHaveProperty(`message`, `Successfully applied to this job!`);
         })
     })
 
     describe(`Failed`, () => {
         test(`Failed 400, Worker Not Complete The Profile`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+            const jobId = String(jobSeed[2]._id);
             const response = await request(app)
                 .post(`/workers/jobs/${jobId}`)
                 .set(`Authorization`, `Bearer ${tokenWorkerEmpty}`);
@@ -393,7 +598,7 @@ describe(`POST /workers/jobs/:job`, () => {
         })
 
         test(`Failed 401, Unauthenticated No Token`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+            const jobId = String(jobSeed[2]._id);
             const response = await request(app)
                 .post(`/workers/jobs/${jobId}`)
 
@@ -402,7 +607,7 @@ describe(`POST /workers/jobs/:job`, () => {
         })
 
         test(`Failed 401, Unauthenticated Invalid Token`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+            const jobId = String(jobSeed[2]._id);
             const response = await request(app)
                 .post(`/workers/jobs/${jobId}`)
                 .set(`Authorization`, `Bearer ${tokenWorker}fwfbda`);
@@ -412,7 +617,7 @@ describe(`POST /workers/jobs/:job`, () => {
         })
 
         test(`Failed 403, Client User attempting to worker routes`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+            const jobId = String(jobSeed[2]._id);
             const response = await request(app)
                 .post(`/workers/jobs/${jobId}`)
                 .set(`Authorization`, `Bearer ${tokenClient}`);
@@ -426,7 +631,7 @@ describe(`POST /workers/jobs/:job`, () => {
 describe(`GET /clients/jobs/:jobId/workers`, () => {
     describe(`Success`, () => {
         test(`Success Get Candidate Worker list 200`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+            const jobId = String(jobSeed[2]._id);
             const response = await request(app)
                 .get(`/clients/jobs/${jobId}/workers`)
                 .set(`Authorization`, `Bearer ${tokenClient}`);
@@ -438,7 +643,7 @@ describe(`GET /clients/jobs/:jobId/workers`, () => {
 
     describe(`Failed`, () => {
         test(`Failed 401, Unauthenticated No Token`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+            const jobId = String(jobSeed[2]._id);
             const response = await request(app)
                 .get(`/clients/jobs/${jobId}/workers`)
 
@@ -447,7 +652,7 @@ describe(`GET /clients/jobs/:jobId/workers`, () => {
         })
 
         test(`Failed 401, Unauthenticated Invalid Token`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+            const jobId = String(jobSeed[2]._id);
             const response = await request(app)
                 .get(`/clients/jobs/${jobId}/workers`)
                 .set(`Authorization`, `Bearer ${tokenClient}fwfbda`);
@@ -461,11 +666,11 @@ describe(`GET /clients/jobs/:jobId/workers`, () => {
 describe(`PATCH /clients/jobs/:jobId/:workerId`, () => {
     describe(`Success`, () => {
         test(`Success Update Job Status and Pick Worker 200`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
-            const workerId = `66dfc17bebbee2647f672acf`
+            const jobId = String(jobSeed[2]._id);
+            const workerId = String(userSeed[2]._id);
             const response = await request(app)
                 .patch(`/clients/jobs/${jobId}/${workerId}`)
-                .set(`Authorization`, `Bearer ${tokenClientPickJob}`);
+                .set(`Authorization`, `Bearer ${tokenClient}`);
 
             expect(response.body).toBeInstanceOf(Object);
             expect(response.body).toHaveProperty(`message`, `Successfully picked worker`);
@@ -474,19 +679,19 @@ describe(`PATCH /clients/jobs/:jobId/:workerId`, () => {
 
     describe(`Failed`, () => {
         test(`Failed 400, Already Picked Worker For The Job`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`;
-            const workerIdError = `666dc09e06f4066bc1defb4bf`
+            const jobId = String(jobSeed[1]._id);
+            const workerIdError = String(userSeed[2]._id);
             const response = await request(app)
                 .patch(`/clients/jobs/${jobId}/${workerIdError}`)
-                .set(`Authorization`, `Bearer ${tokenClientPickJob}`);
+                .set(`Authorization`, `Bearer ${tokenClient}`);
 
             expect(response.body).toBeInstanceOf(Object);
             expect(response.body).toHaveProperty(`message`, `You already picked a worker before`);
         })
 
         test(`Failed 401, Unauthenticated No Token`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
-            const workerId = `66dfc17bebbee2647f672acf`
+            const jobId = String(jobSeed[2]._id);
+            const workerId = String(userSeed[2]._id);
             const response = await request(app)
                 .patch(`/clients/jobs/${jobId}/${workerId}`)
 
@@ -495,10 +700,11 @@ describe(`PATCH /clients/jobs/:jobId/:workerId`, () => {
         })
 
         test(`Failed 401, Unauthenticated Invalid Token`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+            const jobId = String(jobSeed[2]._id);
+            const workerId = String(userSeed[2]._id);
             const response = await request(app)
-                .get(`/clients/jobs/${jobId}/workers`)
-                .set(`Authorization`, `Bearer ${tokenClientPickJob}fwfbda`);
+                .get(`/clients/jobs/${jobId}/${workerId}`)
+                .set(`Authorization`, `Bearer ${tokenClient}fwfbda`);
 
             expect(response.body).toBeInstanceOf(Object);
             expect(response.body).toHaveProperty(`message`, `Invalid access token`);
@@ -506,21 +712,21 @@ describe(`PATCH /clients/jobs/:jobId/:workerId`, () => {
 
         test(`Failed 404, Job Not Found`, async () => {
             const jobIdError = `66dea5d32974b4cd98e9c333`
-            const workerId = `66dfc17bebbee2647f672acf`
+            const workerId = String(userSeed[2]._id);
             const response = await request(app)
                 .patch(`/clients/jobs/${jobIdError}/${workerId}`)
-                .set(`Authorization`, `Bearer ${tokenClientPickJob}`);
+                .set(`Authorization`, `Bearer ${tokenClient}`);
 
             expect(response.body).toBeInstanceOf(Object);
             expect(response.body).toHaveProperty(`message`, `Data Not Found!`);
         })
 
         test(`Failed 403, Other Client Attempt to pick a worker`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`;
-            const workerId = `66dfc17bebbee2647f672acf`
+            const jobId = String(jobSeed[2]._id);
+            const workerId = String(userSeed[2]._id);
             const response = await request(app)
                 .patch(`/clients/jobs/${jobId}/${workerId}`)
-                .set(`Authorization`, `Bearer ${tokenClient}`);
+                .set(`Authorization`, `Bearer ${tokenClientEmpty}`);
 
             expect(response.body).toBeInstanceOf(Object);
             expect(response.body).toHaveProperty(`message`, `Insufficient privileges to do this action`);
@@ -528,11 +734,11 @@ describe(`PATCH /clients/jobs/:jobId/:workerId`, () => {
     })
 })
 
-describe(`GET /workers/jobs/worker`, () => {
+describe(`GET /workers/jobs`, () => {
     describe(`Success`, () => {
         test(`Success Get Active Job List 200`, async () => {
             const response = await request(app)
-                .get(`/workers/jobs/worker`)
+                .get(`/workers/job`)
                 .set(`Authorization`, `Bearer ${tokenWorker}`);
 
             expect(response.body).toBeInstanceOf(Array);
@@ -543,7 +749,7 @@ describe(`GET /workers/jobs/worker`, () => {
     describe(`Failed`, () => {
         test(`Failed 401, Unauthenticated No Token`, async () => {
             const response = await request(app)
-                .get(`/workers/jobs/worker`)
+                .get(`/workers/job`)
 
             expect(response.body).toBeInstanceOf(Object);
             expect(response.body).toHaveProperty(`message`, `Invalid access token`);
@@ -551,7 +757,7 @@ describe(`GET /workers/jobs/worker`, () => {
 
         test(`Failed 401, Unauthenticated Invalid Token`, async () => {
             const response = await request(app)
-                .get(`/workers/jobs/worker`)
+                .get(`/workers/job`)
                 .set(`Authorization`, `Bearer ${tokenWorker}fwfbda`);
 
             expect(response.body).toBeInstanceOf(Object);
@@ -560,7 +766,7 @@ describe(`GET /workers/jobs/worker`, () => {
 
         test(`Failed 403, Client User attempting to worker routes`, async () => {
             const response = await request(app)
-                .get(`/workers/jobs/worker`)
+                .get(`/workers/job`)
                 .set(`Authorization`, `Bearer ${tokenClient}`);
 
             expect(response.body).toBeInstanceOf(Object);
@@ -572,7 +778,7 @@ describe(`GET /workers/jobs/worker`, () => {
 describe(`DELETE /clients/jobs/:jobId`, () => {
     describe(`Success`, () => {
         test(`Success Get Active Job List 200`, async () => {
-            const jobId = `66e0006c28d9b5d515d2a50a`
+            const jobId = String(jobSeed[4]._id);
             const response = await request(app)
                 .delete(`/clients/jobs/${jobId}`)
                 .set(`Authorization`, `Bearer ${tokenClient}`);
@@ -584,7 +790,7 @@ describe(`DELETE /clients/jobs/:jobId`, () => {
 
     describe(`Failed`, () => {
         test(`Failed 401, Unauthenticated No Token`, async () => {
-            const jobId = `66e0006c28d9b5d515d2a50a`
+            const jobId = String(jobSeed[4]._id);
             const response = await request(app)
                 .delete(`/clients/jobs/${jobId}`)
 
@@ -593,7 +799,7 @@ describe(`DELETE /clients/jobs/:jobId`, () => {
         })
 
         test(`Failed 401, Unauthenticated Invalid Token`, async () => {
-            const jobId = `66e0006c28d9b5d515d2a50a`
+            const jobId = String(jobSeed[4]._id);
             const response = await request(app)
                 .delete(`/clients/jobs/${jobId}`)
                 .set(`Authorization`, `Bearer ${tokenClient}fwfbda`);
@@ -613,20 +819,20 @@ describe(`DELETE /clients/jobs/:jobId`, () => {
         })
 
         test(`Failed 403, Attempting to cancel other client job order`, async () => {
-            const jobIdError = `66dea5d32974b4cd98e9c350`
+            const jobIdError = String(jobSeed[3]._id);
             const response = await request(app)
                 .delete(`/clients/jobs/${jobIdError}`)
-                .set(`Authorization`, `Bearer ${tokenClient}`);
+                .set(`Authorization`, `Bearer ${tokenClientEmpty}`);
 
             expect(response.body).toBeInstanceOf(Object);
             expect(response.body).toHaveProperty(`message`, `Insufficient privileges to do this action`);
         })
 
         test(`Failed 403, Attempting to cancel ongoing job order`, async () => {
-            const jobIdError = `66dea5d32974b4cd98e9c350`
+            const jobIdError = String(jobSeed[2]._id)
             const response = await request(app)
                 .delete(`/clients/jobs/${jobIdError}`)
-                .set(`Authorization`, `Bearer ${tokenClientPickJob}`);
+                .set(`Authorization`, `Bearer ${tokenClient}`);
 
             expect(response.body).toBeInstanceOf(Object);
             expect(response.body).toHaveProperty(`message`, `You cannot cancel this job order!`);
@@ -637,7 +843,7 @@ describe(`DELETE /clients/jobs/:jobId`, () => {
 describe(`PATCH /workers/jobs/:jobId/worker`, () => {
     describe(`Success`, () => {
         test(`Success Update Job Status and Get Confirmation from Worker 200`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+            const jobId = String(jobSeed[2]._id);
             const response = await request(app)
                 .patch(`/workers/jobs/${jobId}/worker`)
                 .attach(`image`, `./src/files/test1.jpg`)
@@ -650,7 +856,7 @@ describe(`PATCH /workers/jobs/:jobId/worker`, () => {
 
     describe(`Failed`, () => {
         test(`Failed 400, No Image Upload`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+            const jobId = String(jobSeed[2]._id);
             const response = await request(app)
                 .patch(`/workers/jobs/${jobId}/worker`)
                 .set(`Authorization`, `Bearer ${tokenWorker}`);
@@ -682,7 +888,7 @@ describe(`PATCH /workers/jobs/:jobId/worker`, () => {
         })
 
         // test(`Failed 401, Unauthenticated No Token`, async () => {
-        //     const jobId = `66dea5d32974b4cd98e9c350`
+        //     const jobId = String(jobSeed[2]._id);
         //     const response = await request(app)
         //         .patch(`/workers/jobs/${jobId}/worker`)
         //         .attach(`image`, `./src/files/test1.jpg`)
@@ -692,7 +898,7 @@ describe(`PATCH /workers/jobs/:jobId/worker`, () => {
         // })
 
         // test(`Failed 401, Unauthenticated Invalid Token`, async () => {
-        //     const jobId = `66dea5d32974b4cd98e9c350`
+        //     const jobId = String(jobSeed[2]._id);
         //     const response = await request(app)
         //         .patch(`/workers/jobs/${jobId}/worker`)
         //         .attach(`image`, `./src/files/test1.jpg`)
@@ -703,7 +909,7 @@ describe(`PATCH /workers/jobs/:jobId/worker`, () => {
         // })
 
         test(`Failed 403, Other Client Attempt to enter worker endpoints`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+            const jobId = String(jobSeed[2]._id);
             const response = await request(app)
                 .patch(`/workers/jobs/${jobId}/worker`)
                 .attach(`image`, `./src/files/test1.jpg`)
@@ -714,11 +920,11 @@ describe(`PATCH /workers/jobs/:jobId/worker`, () => {
         })
 
         test(`Failed 403, Other Worker Attempt to confirm a job`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+            const jobId = String(jobSeed[2]._id);
             const response = await request(app)
                 .patch(`/workers/jobs/${jobId}/worker`)
                 .attach(`image`, `./src/files/test1.jpg`)
-                .set(`Authorization`, `Bearer ${tokenWorkerReviews}`);
+                .set(`Authorization`, `Bearer ${tokenWorkerEmpty}`);
 
             expect(response.body).toBeInstanceOf(Object);
             expect(response.body).toHaveProperty(`message`, `Insufficient privileges to do this action`);
@@ -729,10 +935,10 @@ describe(`PATCH /workers/jobs/:jobId/worker`, () => {
 describe(`PATCH /clients/jobs/:jobId/client`, () => {
     describe(`Success`, () => {
         test(`Success Update Job Status And Get Client Confirmation 200`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+            const jobId = String(jobSeed[2]._id);
             const response = await request(app)
                 .patch(`/clients/jobs/${jobId}/client`)
-                .set(`Authorization`, `Bearer ${tokenClientPickJob}`);
+                .set(`Authorization`, `Bearer ${tokenClient}`);
 
             expect(response.body).toBeInstanceOf(Object);
             expect(response.body).toHaveProperty(`message`, `Successfully update job order status`);
@@ -741,17 +947,17 @@ describe(`PATCH /clients/jobs/:jobId/client`, () => {
 
     describe(`Failed`, () => {
         test(`Failed 400, Worker Haven\'t Confirmed Yet`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+            const jobId = String(jobSeed[3]._id);
             const response = await request(app)
                 .patch(`/clients/jobs/${jobId}/client`)
-                .set(`Authorization`, `Bearer ${tokenClientPickJob}`);
+                .set(`Authorization`, `Bearer ${tokenClient}`);
 
             expect(response.body).toBeInstanceOf(Object);
             expect(response.body).toHaveProperty(`message`, `Worker haven\'t confirmed yet`);
         })
 
         test(`Failed 401, Unauthenticated No Token`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+            const jobId = String(jobSeed[2]._id);
             const response = await request(app)
                 .patch(`/clients/jobs/${jobId}/client`)
 
@@ -760,10 +966,10 @@ describe(`PATCH /clients/jobs/:jobId/client`, () => {
         })
 
         test(`Failed 401, Unauthenticated Invalid Token`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+            const jobId = String(jobSeed[2]._id);
             const response = await request(app)
                 .patch(`/clients/jobs/${jobId}/client`)
-                .set(`Authorization`, `Bearer ${tokenClientPickJob}fwfbda`);
+                .set(`Authorization`, `Bearer ${tokenClient}fwfbda`);
 
             expect(response.body).toBeInstanceOf(Object);
             expect(response.body).toHaveProperty(`message`, `Invalid access token`);
@@ -773,17 +979,17 @@ describe(`PATCH /clients/jobs/:jobId/client`, () => {
             const jobIdError = `66dea5d32974b4cd98e9c333`
             const response = await request(app)
                 .patch(`/clients/jobs/${jobIdError}/client`)
-                .set(`Authorization`, `Bearer ${tokenClientPickJob}`);
+                .set(`Authorization`, `Bearer ${tokenClient}`);
 
             expect(response.body).toBeInstanceOf(Object);
             expect(response.body).toHaveProperty(`message`, `Data Not Found!`);
         })
 
         test(`Failed 403, Attempting to confirm other client job order`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+            const jobId = String(jobSeed[2]._id);
             const response = await request(app)
                 .patch(`/clients/jobs/${jobId}/client`)
-                .set(`Authorization`, `Bearer ${tokenClient}`);
+                .set(`Authorization`, `Bearer ${tokenClientEmpty}`);
 
             expect(response.body).toBeInstanceOf(Object);
             expect(response.body).toHaveProperty(`message`, `Insufficient privileges to do this action`);
@@ -794,7 +1000,7 @@ describe(`PATCH /clients/jobs/:jobId/client`, () => {
 describe(`POST /clients/jobs/:jobId/review`, () => {
     describe(`Success`, () => {
         test(`Success Update Job Status And Get Client Confirmation 200`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+            const jobId = String(jobSeed[2]._id);
             const response = await request(app)
                 .post(`/clients/jobs/${jobId}/review`)
                 .field({
@@ -802,7 +1008,7 @@ describe(`POST /clients/jobs/:jobId/review`, () => {
                     rating: 4
                 })
                 .attach(`image`, `./src/files/test1.jpg`)
-                .set(`Authorization`, `Bearer ${tokenClientPickJob}`);
+                .set(`Authorization`, `Bearer ${tokenClient}`);
 
             expect(response.body).toBeInstanceOf(Object);
             expect(response.body).toHaveProperty(`message`, `Successfully created review`);
@@ -810,15 +1016,15 @@ describe(`POST /clients/jobs/:jobId/review`, () => {
     })
 
     describe(`Failed`, () => {
-        test(`Failed 400, Worker Haven\'t Confirmed Yet`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+        test(`Failed 400, No Rating Input`, async () => {
+            const jobId = String(jobSeed[2]._id);
             const response = await request(app)
                 .post(`/clients/jobs/${jobId}/review`)
                 .field({
                     description: `Hebat, Great Job!`
                 })
                 .attach(`image`, `./src/files/test1.jpg`)
-                .set(`Authorization`, `Bearer ${tokenClientPickJob}`);
+                .set(`Authorization`, `Bearer ${tokenClient}`);
 
             expect(response.body).toBeInstanceOf(Object);
             expect(response.body).toHaveProperty(`message`, `Please input the rating!`);
@@ -843,7 +1049,7 @@ describe(`POST /clients/jobs/:jobId/review`, () => {
         //         .field({
         //             description: `Hebat, Great Job!`
         //         })
-        //         .set(`Authorization`, `Bearer ${tokenClientPickJob}fwfbda`);
+        //         .set(`Authorization`, `Bearer ${tokenClient}fwfbda`);
 
         //     expect(response.body).toBeInstanceOf(Object);
         //     expect(response.body).toHaveProperty(`message`, `Invalid access token`);
@@ -857,21 +1063,21 @@ describe(`POST /clients/jobs/:jobId/review`, () => {
                     description: `Hebat, Great Job!`
                 })
                 .attach(`image`, `./src/files/test1.jpg`)
-                .set(`Authorization`, `Bearer ${tokenClientPickJob}`);
+                .set(`Authorization`, `Bearer ${tokenClient}`);
 
             expect(response.body).toBeInstanceOf(Object);
             expect(response.body).toHaveProperty(`message`, `Data Not Found!`);
         })
 
-        test(`Failed 403, Attempting to confirm other client job order`, async () => {
-            const jobId = `66dea5d32974b4cd98e9c350`
+        test(`Failed 403, Attempting to review other client job order`, async () => {
+            const jobId = String(jobSeed[2]._id);
             const response = await request(app)
                 .post(`/clients/jobs/${jobId}/review`)
                 .field({
                     description: `Hebat, Great Job!`
                 })
                 .attach(`image`, `./src/files/test1.jpg`)
-                .set(`Authorization`, `Bearer ${tokenClient}`);
+                .set(`Authorization`, `Bearer ${tokenClientEmpty}`);
 
             expect(response.body).toBeInstanceOf(Object);
             expect(response.body).toHaveProperty(`message`, `Insufficient privileges to do this action`);

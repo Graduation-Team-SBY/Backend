@@ -1,6 +1,10 @@
 import request from "supertest";
 import mongoose from "mongoose";
 import { app } from "../app";
+import { User } from "../models/user";
+import { Wallet } from "../models/wallet";
+import { Profile } from "../models/profile";
+import { WorkerProfile } from "../models/workerprofile";
 
 const MONGO_URI : any = process.env.MONGO_URI;
 
@@ -14,6 +18,11 @@ beforeAll(async () => {
 
 afterAll(async () => {
     try {
+        await Wallet.deleteMany();
+        await Profile.deleteMany();
+        await WorkerProfile.deleteMany();
+        await User.deleteMany();
+        
         await mongoose.connection.close();
     } catch (error) {
         console.log(error);
