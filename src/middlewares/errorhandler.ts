@@ -78,6 +78,10 @@ export const errorHandler = (
       status = 400;
       message = 'Please input the rating!';
       break;
+    case 'JobAppliedAlready':
+      status = 400;
+      message = 'You already applied to this job';
+      break;
   }
   console.log(err);
   res.status(status).json({ message });
