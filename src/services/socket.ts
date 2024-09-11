@@ -5,7 +5,7 @@ import { WorkerProfile } from "../models/workerprofile";
 
 export const socketFunc = (io: any) => {
   io.on("connection", (socket: any) => {
-    console.log(`User connected => ${socket.id}`);
+    // console.log(`User connected => ${socket.id}`);
     socket.on("join_room", async (jobId: string) => {
       let chatId: any;
       try {
@@ -46,7 +46,7 @@ export const socketFunc = (io: any) => {
     });
 
     socket.on("disconnect", () => {
-      console.log("User Disconnected", socket.id);
+      // console.log("User Disconnected", socket.id);
     });
   });
 };
