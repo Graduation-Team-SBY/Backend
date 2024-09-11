@@ -26,7 +26,7 @@ export class Controller {
         coordinates,
         addressNotes,
         fee: Number(fee),
-        categoryId: new ObjectId("66e11fc199da71c3d8a31e9d"),
+        categoryId: new ObjectId("66e12f48bd16de27f49d7de3"),
         clientId: req.user?._id,
       });
       await session.withTransaction(async () => {
@@ -79,7 +79,7 @@ export class Controller {
         coordinates,
         addressNotes,
         fee: Number(fee),
-        categoryId: new ObjectId("66e11fc199da71c3d8a31e9c"),
+        categoryId: new ObjectId("66e12f48bd16de27f49d7de4"),
         clientId: req.user?._id,
       });
       await session.withTransaction(async () => {
@@ -168,7 +168,7 @@ export class Controller {
         });
       }
       const jobs = await Job.aggregate(agg)
-        .unwind("category")
+        .unwind('category')
         .sort({ createdAt: sortOrder as SortOrder });
       res.status(200).json(jobs);
     } catch (err) {
@@ -532,7 +532,26 @@ export class Controller {
             path: "$category",
             preserveNullAndEmptyArrays: true,
           },
+        }, {
+          '$lookup': {
+            'from': 'profiles', 
+            'localField': 'clientId', 
+            'foreignField': 'userId', 
+            'as': 'client'
+          }
+        }, {
+          '$unwind': {
+            'path': '$client', 
+            'preserveNullAndEmptyArrays': true
+          }
         },
+        {
+          $project: {
+            "client.dateOfBirth": 0,
+            "client.contents": 0,
+            "client.address": 0
+          },
+        }
       ];
       const workers = await Job.aggregate(agg);
       res.status(200).json(workers[0]);

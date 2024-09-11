@@ -119,6 +119,12 @@ export class Controller {
           }
         }, {
           '$limit': 5
+        }, {
+          '$match': {
+            'rating': {
+              '$gt': 0
+            }
+          }
         }
       ];
 
