@@ -268,6 +268,26 @@ export class Controller {
         },
         {
           $lookup: {
+            from: "profiles",
+            localField: "clientId",
+            foreignField: "userId",
+            as: "client",
+          },
+        },
+        {
+          $unwind: {
+            path: "$client",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $project: {
+            "client.dateOfBirth": 0,
+            "client.address": 0,
+          },
+        },
+        {
+          $lookup: {
             from: "workerprofiles",
             localField: "workers.workerId",
             foreignField: "userId",
