@@ -964,6 +964,7 @@ _Response(200 - OK)_
 [
     {
         "_id": "ObjectId",
+        "title": "String",
         "description": "String",
         "addess": "String",
         "fee": "Number",
@@ -1017,6 +1018,7 @@ _Response (200 - OK)_
 [
     {
         "_id": "ObjectId",
+        "title": "String",
         "description": "String",
         "addess": "String",
         "fee": "Number",
