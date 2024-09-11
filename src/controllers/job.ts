@@ -248,6 +248,67 @@ export class Controller {
       next(err);
     }
   }
+  static async newestJobWorker(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { category, sort } = req.query;
+      let sortOrder = -1;
+      if (sort === "asc") {
+        sortOrder = 1;
+      }
+      if (sort === "desc") {
+        sortOrder = -1;
+      }
+      const agg: any = [
+        {
+          $match: {
+            workerId: null,
+          },
+        },
+        {
+          $lookup: {
+            from: "categories",
+            localField: "categoryId",
+            foreignField: "_id",
+            as: "category",
+          },
+        },
+        {
+          $unwind: {
+            path: "$category",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $lookup: {
+            from: "profiles",
+            localField: "clientId",
+            foreignField: "userId",
+            as: "client",
+          },
+        },
+        {
+          $unwind: {
+            path: "$client",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+      ];
+
+      if (category) {
+        agg.push({
+          $match: {
+            "category.name": category,
+          },
+        });
+      }
+      const jobs = await Job.aggregate(agg).sort({
+        createdAt: sortOrder as SortOrder,
+      }).limit(5);
+      res.status(200).json(jobs);
+    } catch (err) {
+      next(err);
+    }
+  }
 
   static async jobDetail(req: Request, res: Response, next: NextFunction) {
     try {
