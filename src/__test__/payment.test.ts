@@ -83,7 +83,7 @@ afterAll(async () => {
         await TopUp.deleteMany();
         await Wallet.deleteMany();
         await User.deleteMany();
-        
+
         await mongoose.connection.close();
     } catch (error) {
         console.log(error);

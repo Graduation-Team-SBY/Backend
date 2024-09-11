@@ -22,7 +22,7 @@ afterAll(async () => {
         await Profile.deleteMany();
         await WorkerProfile.deleteMany();
         await User.deleteMany();
-        
+
         await mongoose.connection.close();
     } catch (error) {
         console.log(error);

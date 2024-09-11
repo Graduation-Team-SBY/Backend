@@ -367,6 +367,24 @@ describe(`GET /profile/histories`, () => {
             expect(response.body).toBeInstanceOf(Array);
             expect(response.body[0]).toHaveProperty(`_id`, expect.any(String));
         })
+        
+        test(`Success Get Client transaction histories filtered by week 200`, async () => {
+            const response = await request(app)
+                .get(`/profile/histories?sort=desc&filter=week`)
+                .set(`Authorization`, `Bearer ${tokenClient}`);
+
+            expect(response.body).toBeInstanceOf(Array);
+            expect(response.body[0]).toHaveProperty(`_id`, expect.any(String));
+        })
+
+        test(`Success Get Client transaction histories by month 200`, async () => {
+            const response = await request(app)
+                .get(`/profile/histories?filter=year`)
+                .set(`Authorization`, `Bearer ${tokenClient}`);
+
+            expect(response.body).toBeInstanceOf(Array);
+            expect(response.body[0]).toHaveProperty(`_id`, expect.any(String));
+        })
     })
 
     describe(`Failed`, () => {
@@ -567,5 +585,37 @@ describe(`PATCH /workers/profile`, () => {
         //     expect(response.body).toBeInstanceOf(Object);
         //     expect(response.body).toHaveProperty(`message`, `Invalid access token`);
         // })
+    })
+})
+
+describe(`GET /clients/best-yasa`, () => {
+    describe(`Success`, () => {
+        test(`Success Get The Best Yasa list 200`, async () => {
+            const response = await request(app)
+                .get(`/clients/best-yasa`)
+                .set(`Authorization`, `Bearer ${tokenClient}`);
+
+            expect(response.body).toBeInstanceOf(Array);
+            expect(response.body[0]).toHaveProperty(`_id`, expect.any(String));
+        })
+    })
+
+    describe(`Failed`, () => {
+        test(`Failed 401, Unauthenticated No Token`, async () => {
+            const response = await request(app)
+                .get(`/clients/best-yasa`);
+
+            expect(response.body).toBeInstanceOf(Object);
+            expect(response.body).toHaveProperty(`message`, `Invalid access token`);
+        })
+
+        test(`Failed 401, Unauthenticated Invalid Token`, async () => {
+            const response = await request(app)
+                .get(`/clients/best-yasa`)
+                .set(`Authorization`, `Bearer ${tokenClient}fwfbda`);
+
+            expect(response.body).toBeInstanceOf(Object);
+            expect(response.body).toHaveProperty(`message`, `Invalid access token`);
+        })
     })
 })

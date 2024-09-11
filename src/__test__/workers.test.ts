@@ -40,11 +40,35 @@ const userSeed = [
     }
 ]
 
+const workerProfileSeed = [
+    {
+        _id: new ObjectId(),
+        name: `Worker 1 Test`,
+        dateOfBirth: new Date(`2000-11-16`),
+        profilePicture: `https://picsum.photos/200`,
+        address: `Paris van java, Bandung`,
+        jobDone: 2,
+        rating: 4,
+        userId: userSeed[2]._id
+    },
+    {
+        _id: new ObjectId(),
+        name: null,
+        dateOfBirth: null,
+        profilePicture: null,
+        address: null,
+        jobDone: 0,
+        rating: 0,
+        userId: userSeed[3]._id
+    }
+]
+
 beforeAll(async () => {
     try {
         await mongoose.connect(MONGO_URI, { dbName: "testing"});
 
         await User.insertMany(userSeed);
+        await WorkerProfile.insertMany(workerProfileSeed);
 
         tokenClient = signToken({ _id: String(userSeed[0]._id) });
     } catch (error) {
@@ -54,42 +78,43 @@ beforeAll(async () => {
 
 afterAll(async () => {
     try {
+        await WorkerProfile.deleteMany();
         await User.deleteMany();
-        
+
         await mongoose.connection.close();
     } catch (error) {
         console.log(error);
     }
 });
 
-describe(`GET /clients/best-yasa`, () => {
-    describe(`Success`, () => {
-        test(`Success Get The Best Yasa list 200`, async () => {
-            const response = await request(app)
-                .get(`/clients/best-yasa`)
-                .set(`Authorization`, `Bearer ${tokenClient}`);
+// describe(`GET /clients/best-yasa`, () => {
+//     describe(`Success`, () => {
+//         test(`Success Get The Best Yasa list 200`, async () => {
+//             const response = await request(app)
+//                 .get(`/clients/best-yasa`)
+//                 .set(`Authorization`, `Bearer ${tokenClient}`);
 
-            expect(response.body).toBeInstanceOf(Array);
-            expect(response.body[0]).toHaveProperty(`_id`, expect.any(String));
-        })
-    })
+//             expect(response.body).toBeInstanceOf(Array);
+//             expect(response.body[0]).toHaveProperty(`_id`, expect.any(String));
+//         })
+//     })
 
-    describe(`Failed`, () => {
-        test(`Failed 401, Unauthenticated No Token`, async () => {
-            const response = await request(app)
-                .get(`/clients/best-yasa`);
+//     describe(`Failed`, () => {
+//         test(`Failed 401, Unauthenticated No Token`, async () => {
+//             const response = await request(app)
+//                 .get(`/clients/best-yasa`);
 
-            expect(response.body).toBeInstanceOf(Object);
-            expect(response.body).toHaveProperty(`message`, `Invalid access token`);
-        })
+//             expect(response.body).toBeInstanceOf(Object);
+//             expect(response.body).toHaveProperty(`message`, `Invalid access token`);
+//         })
 
-        test(`Failed 401, Unauthenticated Invalid Token`, async () => {
-            const response = await request(app)
-                .get(`/clients/best-yasa`)
-                .set(`Authorization`, `Bearer ${tokenClient}fwfbda`);
+//         test(`Failed 401, Unauthenticated Invalid Token`, async () => {
+//             const response = await request(app)
+//                 .get(`/clients/best-yasa`)
+//                 .set(`Authorization`, `Bearer ${tokenClient}fwfbda`);
 
-            expect(response.body).toBeInstanceOf(Object);
-            expect(response.body).toHaveProperty(`message`, `Invalid access token`);
-        })
-    })
-})
+//             expect(response.body).toBeInstanceOf(Object);
+//             expect(response.body).toHaveProperty(`message`, `Invalid access token`);
+//         })
+//     })
+// })
