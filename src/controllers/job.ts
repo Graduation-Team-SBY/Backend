@@ -79,7 +79,7 @@ export class Controller {
         coordinates,
         addressNotes,
         fee: Number(fee),
-        categoryId: new ObjectId("66e11fc199da71c3d8a31e9c"),
+        categoryId: new ObjectId("66d97e7518cd9c2062da3d98"),
         clientId: req.user?._id,
       });
       await session.withTransaction(async () => {
@@ -168,7 +168,7 @@ export class Controller {
         });
       }
       const jobs = await Job.aggregate(agg)
-        .unwind("category")
+        .unwind('category')
         .sort({ createdAt: sortOrder as SortOrder });
       res.status(200).json(jobs);
     } catch (err) {
@@ -244,6 +244,67 @@ export class Controller {
         res.status(200).json(jobs);
         // await redis.set(cacheName, JSON.stringify(jobs));
       }
+    } catch (err) {
+      next(err);
+    }
+  }
+  static async newestJobWorker(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { category, sort } = req.query;
+      let sortOrder = -1;
+      if (sort === "asc") {
+        sortOrder = 1;
+      }
+      if (sort === "desc") {
+        sortOrder = -1;
+      }
+      const agg: any = [
+        {
+          $match: {
+            workerId: null,
+          },
+        },
+        {
+          $lookup: {
+            from: "categories",
+            localField: "categoryId",
+            foreignField: "_id",
+            as: "category",
+          },
+        },
+        {
+          $unwind: {
+            path: "$category",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $lookup: {
+            from: "profiles",
+            localField: "clientId",
+            foreignField: "userId",
+            as: "client",
+          },
+        },
+        {
+          $unwind: {
+            path: "$client",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+      ];
+
+      if (category) {
+        agg.push({
+          $match: {
+            "category.name": category,
+          },
+        });
+      }
+      const jobs = await Job.aggregate(agg).sort({
+        createdAt: sortOrder as SortOrder,
+      }).limit(5);
+      res.status(200).json(jobs);
     } catch (err) {
       next(err);
     }
@@ -532,7 +593,26 @@ export class Controller {
             path: "$category",
             preserveNullAndEmptyArrays: true,
           },
+        }, {
+          '$lookup': {
+            'from': 'profiles', 
+            'localField': 'clientId', 
+            'foreignField': 'userId', 
+            'as': 'client'
+          }
+        }, {
+          '$unwind': {
+            'path': '$client', 
+            'preserveNullAndEmptyArrays': true
+          }
         },
+        {
+          $project: {
+            "client.dateOfBirth": 0,
+            "client.contents": 0,
+            "client.address": 0
+          },
+        }
       ];
       const workers = await Job.aggregate(agg);
       res.status(200).json(workers[0]);
@@ -780,7 +860,7 @@ export class Controller {
       const job = await Job.findById(new ObjectId(jobId));
       const worker = await WorkerProfile.findOne({ userId: job?.workerId });
       await session.withTransaction(async () => {
-        const ratingNow = (((worker?.rating as number) * (worker?.jobDone as number)) + Number(rating)) / (worker?.jobDone as number + 1);
+        const ratingNow = Number(((((worker?.rating as number) * (worker?.jobDone as number)) + Number(rating)) / (worker?.jobDone as number + 1)).toFixed(1));
         await worker?.updateOne({ rating: ratingNow, $inc: { jobDone: 1 } }, { session });
         const reviewImageUrls = await uploadImageFiles(req.files as Express.Multer.File[], user?._id, new ObjectId(jobId));
         const newReview = new Review({ jobId, description, rating, images: reviewImageUrls });
