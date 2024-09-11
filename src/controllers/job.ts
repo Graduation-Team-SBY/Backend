@@ -780,7 +780,7 @@ export class Controller {
       const job = await Job.findById(new ObjectId(jobId));
       const worker = await WorkerProfile.findOne({ userId: job?.workerId });
       await session.withTransaction(async () => {
-        const ratingNow = (((worker?.rating as number) * (worker?.jobDone as number)) + Number(rating)) / (worker?.jobDone as number + 1);
+        const ratingNow = Number(((((worker?.rating as number) * (worker?.jobDone as number)) + Number(rating)) / (worker?.jobDone as number + 1)).toFixed(1));
         await worker?.updateOne({ rating: ratingNow, $inc: { jobDone: 1 } }, { session });
         const reviewImageUrls = await uploadImageFiles(req.files as Express.Multer.File[], user?._id, new ObjectId(jobId));
         const newReview = new Review({ jobId, description, rating, images: reviewImageUrls });
