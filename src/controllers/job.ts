@@ -532,7 +532,26 @@ export class Controller {
             path: "$category",
             preserveNullAndEmptyArrays: true,
           },
+        }, {
+          '$lookup': {
+            'from': 'profiles', 
+            'localField': 'clientId', 
+            'foreignField': 'userId', 
+            'as': 'client'
+          }
+        }, {
+          '$unwind': {
+            'path': '$client', 
+            'preserveNullAndEmptyArrays': true
+          }
         },
+        {
+          $project: {
+            "client.dateOfBirth": 0,
+            "client.contents": 0,
+            "client.address": 0
+          },
+        }
       ];
       const workers = await Job.aggregate(agg);
       res.status(200).json(workers[0]);
