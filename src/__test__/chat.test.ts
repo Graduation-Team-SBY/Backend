@@ -229,7 +229,7 @@ describe("Additional Chat Socket.IO Tests", () => {
     clientUserSocket.emit("join_room", nonExistentJobId);
   });
 
-  test.only("should send message and update chat in database", async () => {
+  test("should send message and update chat in database", async () => {
     const messageData = {
       room: newJobBebersih2._id.toString(),
       senderId: newJobBebersih2.clientId.toString(),
@@ -237,15 +237,11 @@ describe("Additional Chat Socket.IO Tests", () => {
       createdAt: new Date(),
     };
 
-    console.log(messageData, " << message Data");
-
     // Ensure the job has a chatId before proceeding
     const jobWithChat = await Job.findById(newJobBebersih2._id);
     if (!jobWithChat) {
       throw new Error("Job not found during test initialization");
     }
-
-    console.log(jobWithChat.chatId, "<< jobWithChat.chatId");
 
     // Ensure initial connection and joining of room
     await new Promise<void>((resolve) => {
@@ -259,16 +255,12 @@ describe("Additional Chat Socket.IO Tests", () => {
 
     // Log chat state before sending the message
     const preChatState = await Chat.findById(jobWithChat.chatId);
-    console.log(preChatState, "<< Pre Chat State");
 
     return new Promise<void>((resolve) => {
       const receiveMessageHandler = async (data: any) => {
-        console.log(data, "<<< Received data");
-
         // Allow some time for changes to propagate
         setTimeout(async () => {
           const updatedChat = await Chat.findById(jobWithChat.chatId);
-          console.log(updatedChat, "<< Updated chat");
 
           expect(updatedChat).toBeDefined();
           if (updatedChat) {
@@ -280,7 +272,6 @@ describe("Additional Chat Socket.IO Tests", () => {
             );
           }
 
-          // Off the listener for cleaner code
           workerUserSocket.off("receive_message", receiveMessageHandler);
           resolve();
         }, 500); // Give some time for database operations
@@ -290,7 +281,7 @@ describe("Additional Chat Socket.IO Tests", () => {
       clientUserSocket.emit("send_message", messageData, jobWithChat.chatId, newJalu._id);
     });
   });
-  
+
   test("should handle sending message to non-existent chat", (done) => {
     const messageData = {
       content: "This message should not be sent",
